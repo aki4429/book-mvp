@@ -13,6 +13,8 @@
         $q->whereBetween('slot_date', [now()->startOfWeek(), now()->endOfWeek()])
     )->count() "
 />
+<livewire:calendar />
+
 
     </div>
 @endsection
