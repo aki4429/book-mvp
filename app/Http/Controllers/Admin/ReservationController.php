@@ -27,7 +27,7 @@ class ReservationController extends Controller
     {
         return view('admin.reservations.create', [
             'customers'   => \App\Models\Customer::orderBy('name')->get(),
-            'timeSlots'   => \App\Models\TimeSlot::orderBy('slot_date')->orderBy('start_time')->get(),
+            'timeSlots'   => \App\Models\TimeSlot::orderBy('date')->orderBy('start_time')->get(),
             'statuses'    => ['pending','confirmed','canceled','completed'],
         ]);
     }
@@ -77,7 +77,7 @@ class ReservationController extends Controller
         return view('admin.reservations.edit', [
             'reservation' => $reservation->load(['customer','timeSlot']),
             'customers'   => \App\Models\Customer::orderBy('name')->get(),
-            'timeSlots'   => \App\Models\TimeSlot::orderBy('slot_date')->orderBy('start_time')->get(),
+            'timeSlots'   => \App\Models\TimeSlot::orderBy('date')->orderBy('start_time')->get(),
             'statuses'    => ['pending','confirmed','canceled','completed'],
         ]);
     }

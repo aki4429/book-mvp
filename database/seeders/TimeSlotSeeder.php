@@ -13,6 +13,8 @@ class TimeSlotSeeder extends Seeder
      */
     public function run(): void
     {
+        \Log::info('TimeSlotSeeder started');
         TimeSlot::factory()->count(70)->create();
+        \Log::info('TimeSlotSeeder completed');
     }
 }

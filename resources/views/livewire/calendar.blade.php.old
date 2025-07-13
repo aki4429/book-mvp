@@ -1,0 +1,87 @@
+<div class="bg-white p-4 rounded shadow">
+  <!-- デバッグ: テストボタン -->
+  <div class="mb-4 p-2 bg-yellow-100 border border-yellow-400 rounded">
+    <p class="text-sm">デバッグ情報: {{ $currentMonth->format('Y年n月') }}</p>
+    <p class="text-xs">Year: {{ $year }}, Month: {{ $month }}</p>
+
+    <!-- 基本的なJavaScriptテスト -->
+    <button onclick="alert('JavaScript works!')" class="mb-2 px-4 py-2 bg-purple-500 text-white">JS テスト</button>
+    <br>
+
+    <button wire:click="prevMonth" class="mr-2 px-4 py-2 bg-red-500 text-white"
+      onclick="console.log('prevMonth clicked'); alert('prevMonth button clicked')">← 前月</button>
+    <button wire:click="nextMonth" class="px-4 py-2 bg-green-500 text-white"
+      onclick="console.log('nextMonth clicked'); alert('nextMonth button clicked')">次月 →</button>
+    <button
+      onclick="console.log('Livewire:', window.Livewire); alert('Livewire check: ' + (window.Livewire ? 'exists' : 'missing'))"
+      class="ml-2 px-4 py-2 bg-gray-500 text-white">Livewire チェック</button>
+
+    <!-- 手動Livewire初期化テスト -->
+    <button
+      onclick="
+      if (window.Livewire) {
+        alert('Livewire found!');
+      } else if (window.Alpine) {
+        alert('Alpine found, but no Livewire');
+      } else {
+        alert('Neither Alpine nor Livewire found');
+      }
+    "
+      class="ml-2 px-4 py-2 bg-orange-500 text-white">詳細チェック</button>
+  </div>
+
+  <div class="flex justify-between items-center mb-2">
+    <button wire:click="prevMonth"
+      class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">‹</button>
+    <h3 class="font-semibold">{{ $currentMonth->format('Y年n月') }}</h3>
+    <button wire:click="nextMonth"
+      class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">›</button>
+  </div>
+
+  <table class="w-full text-center">
+    <thead class="text-xs text-gray-500">
+      @foreach (['日', '月', '火', '水', '木', '金', '土'] as $dow)
+        <th>{{ $dow }}</th>
+      @endforeach
+    </thead>
+    <tbody>
+      @foreach ($weeks as $week)
+        <tr>
+          @foreach ($week as $day)
+            <td class="border p-2 align-top">
+              <div class="font-bold">{{ $day->format('n/j') }}</div>
+
+              @php
+                $dayKey = $day->format('Y-m-d');
+              @endphp
+
+              @if ($slots->has($dayKey))
+                {{-- @foreach ($slots[$dayKey] as $slot) --}}
+                {{-- <div class="mt-1"> --}}
+                {{-- {{ $slot->start_time }} - {{ $slot->end_time }} --}}
+                {{-- @if ($slot->available) --}}
+                {{-- <a href="{{ route('reservations.create', ['slot_id' => $slot->id]) }}" --}}
+                {{-- class="ml-1 text-blue-500 underline text-sm"> --}}
+                {{-- 予約 --}}
+                {{-- </a> --}}
+                {{-- @else --}}
+                {{-- <span class="ml-1 text-gray-400 text-sm">(予約済)</span> --}}
+                {{-- @endif --}}
+                {{-- </div> --}}
+                {{-- @endforeach --}}
+                @foreach ($slots[$day->format('Y-m-d')] ?? [] as $slot)
+                  <a href="{{ route('reservations.create', ['slot_id' => $slot->id]) }}"
+                    class="block text-sm text-blue-600 hover:underline">
+                    {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}
+                  </a>
+                @endforeach
+              @endif
+
+            </td>
+          @endforeach
+        </tr>
+      @endforeach
+
+    </tbody>
+  </table>
+</div>

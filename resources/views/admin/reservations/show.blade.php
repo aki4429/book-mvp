@@ -13,12 +13,16 @@
     </div>
     <div class="bg-white p-6 rounded shadow">
       <h3 class="font-semibold mb-2">時間枠</h3>
-      <p>{{ $reservation->timeSlot->slot_date }}</p>
-      <p>{{ $reservation->timeSlot->start_time }}-{{ $reservation->timeSlot->end_time }}</p>
+      @if ($reservation->timeSlot)
+        <p>{{ $reservation->timeSlot->date }}</p>
+        <p>{{ $reservation->timeSlot->start_time }} - {{ $reservation->timeSlot->end_time }}</p>
+      @else
+        <p class="text-gray-500 italic">予約枠情報がありません</p>
+      @endif
+
       <p><b>作成:</b> {{ $reservation->created_at->format('Y-m-d H:i') }}</p>
     </div>
   </div>
 
-  <a href="{{ route('admin.reservations.index') }}"
-     class="inline-block mt-6 text-blue-600 hover:underline">← 一覧へ戻る</a>
+  <a href="{{ route('admin.reservations.index') }}" class="inline-block mt-6 text-blue-600 hover:underline">← 一覧へ戻る</a>
 @endsection
