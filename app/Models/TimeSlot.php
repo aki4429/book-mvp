@@ -10,7 +10,8 @@ class TimeSlot extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['date', 'available'];
+    protected $fillable = ['date', 'start_time', 'end_time', 'capacity', 'available'];
+
 
     protected $dates = ['date'];
 

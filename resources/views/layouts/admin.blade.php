@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <title>@yield('title', 'Dashboard')</title>
   @livewireStyles
+  <script src="//unpkg.com/alpinejs" defer></script>
 </head>
 
 <body class="h-screen flex bg-gray-100">
@@ -21,6 +22,12 @@
           <use href="#home-icon" />
         </svg>
         <span>ダッシュボード</span>
+      </a>
+      <a href="{{ route('admin.timeslots.index') }}"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          {{ request()->routeIs('admin.reservations.create') ? 'bg-gray-200 font-semibold' : '' }}">
+        <svg class="h-5 w-5 mr-2"><!-- plus icon --></svg>
+        <span>予約枠一覧</span>
       </a>
       <a href="{{ route('calendar') }}"
         class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200

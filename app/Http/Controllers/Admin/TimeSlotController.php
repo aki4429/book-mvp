@@ -3,63 +3,58 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\TimeSlot;
 use Illuminate\Http\Request;
 
 class TimeSlotController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $timeSlots = TimeSlot::orderBy('date')->orderBy('start_time')->paginate(20);
+        return view('admin.timeslots.index', compact('timeSlots'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('admin.timeslots.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'date'       => 'required|date',
+            'start_time' => 'required',
+            'end_time'   => 'required|after:start_time',
+            'capacity'   => 'required|integer|min:1',
+            'available'  => 'boolean',
+        ]);
+
+        TimeSlot::create($validated);
+        return redirect()->route('admin.timeslots.index')->with('success', '枠を作成しました');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(TimeSlot $timeslot)
     {
-        //
+        return view('admin.timeslots.edit', compact('timeslot'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, TimeSlot $timeslot)
     {
-        //
+        $validated = $request->validate([
+            'date'       => 'required|date',
+            'start_time' => 'required',
+            'end_time'   => 'required|after:start_time',
+            'capacity'   => 'required|integer|min:1',
+            'available'  => 'boolean',
+        ]);
+
+        $timeslot->update($validated);
+        return redirect()->route('admin.timeslots.index')->with('success', '枠を更新しました');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(TimeSlot $timeslot)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $timeslot->delete();
+        return redirect()->route('admin.timeslots.index')->with('success', '削除しました');
     }
 }

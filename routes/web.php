@@ -49,7 +49,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     //   ->only(['index', 'show']);               // 一覧と詳細だけ
 });
 
-Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::resource('timeslots', \App\Http\Controllers\Admin\TimeSlotController::class);
 });
 
@@ -57,5 +57,8 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
 
 Route::get('/reservations/create', [PublicReservationController::class, 'create'])->name('reservations.create');
 Route::post('/reservations', [PublicReservationController::class, 'store'])->name('reservations.store');
+
+// Route::get('/admin/timeslots/form/{timeslotId?}', TimeSlotForm::class)->name('timeslots.form');
+
 
 require __DIR__.'/auth.php';
