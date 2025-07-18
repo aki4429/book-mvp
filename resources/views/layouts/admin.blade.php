@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <title>@yield('title', 'Dashboard')</title>
   @livewireStyles
-  <script src="//unpkg.com/alpinejs" defer></script>
 </head>
 
 <body class="h-screen flex bg-gray-100">
@@ -97,6 +96,7 @@
 
   {{-- Vite assets includes Livewire for v3 --}}
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @livewireScripts
 </body>
 
 </html>

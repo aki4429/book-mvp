@@ -11,10 +11,36 @@ class Calendar extends Component
     public $year;
     public $month;
     public $selectedDate = null; // ← 追加
+    public $showTimeSlotForm = false;
+    public $editingDate = null;
 
-    public function selectDate($date) // ← 追加
+    protected $listeners = ['refreshCalendar'];
+
+    public function refreshCalendar()
+    {
+        // カレンダーの再レンダリング
+        $this->showTimeSlotForm = false;
+    }
+
+    public function selectDate($date)
     {
         $this->selectedDate = $date;
+    }
+
+    public function openTimeSlotForm($date = null, $timeslotId = null)
+    {
+        $this->editingDate = $date;
+        $this->showTimeSlotForm = true;
+        
+        // その日の既存の予約枠を取得（最初の予約枠を編集対象とする）
+        $existingSlot = null;
+        if ($date) {
+            $existingSlot = TimeSlot::whereDate('date', $date)
+                ->orderBy('start_time')
+                ->first();
+        }
+        
+        $this->dispatch('openTimeSlotForm', $date, $existingSlot ? $existingSlot->id : null);
     }
 
     public function mount()
@@ -25,34 +51,16 @@ class Calendar extends Component
 
     public function prevMonth()
     {
-        \Log::info('=== prevMonth START ===');
-        \Log::info('prevMonth called', ['current' => $this->year . '-' . $this->month]);
-
         $date = Carbon::create($this->year, $this->month, 1)->subMonth();
         $this->year = $date->year;
         $this->month = $date->month;
-
-        \Log::info('prevMonth result', ['new' => $this->year . '-' . $this->month]);
-        \Log::info('=== prevMonth END ===');
-
-        // 強制的に再レンダリング
-        $this->render();
     }
 
     public function nextMonth()
     {
-        \Log::info('=== nextMonth START ===');
-        \Log::info('nextMonth called', ['current' => $this->year . '-' . $this->month]);
-
         $date = Carbon::create($this->year, $this->month, 1)->addMonth();
         $this->year = $date->year;
         $this->month = $date->month;
-
-        \Log::info('nextMonth result', ['new' => $this->year . '-' . $this->month]);
-        \Log::info('=== nextMonth END ===');
-
-        // 強制的に再レンダリング
-        $this->render();
     }
 
     public function render()
@@ -97,6 +105,8 @@ class Calendar extends Component
             'month'        => $this->month,
             'slots' => $slots,
             'selectedDate'  => $this->selectedDate, // ← 追加
+            'showTimeSlotForm' => $this->showTimeSlotForm,
+            'editingDate' => $this->editingDate,
         ]);
     }
 

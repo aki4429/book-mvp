@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Reservation;
+use App\Mail\ReservationConfirmed;
+use App\Mail\ReservationNotification;
+use Illuminate\Support\Facades\Mail;
 
 class ReservationController extends Controller
 {
@@ -47,7 +50,13 @@ class ReservationController extends Controller
 
         $data['created_by'] = auth()->id();
 
-        \App\Models\Reservation::create($data);
+        $reservation = \App\Models\Reservation::create($data);
+
+        // 顧客へのサンクスメール
+        Mail::to($reservation->customer->email)->send(new ReservationConfirmed($reservation));
+
+        // 管理者への通知メール
+        Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reservation));
 
         return redirect()
             ->route('admin.reservations.index')

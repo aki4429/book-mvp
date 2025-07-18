@@ -32,14 +32,14 @@
             <div>{{ $day->format('j') }}</div>
 
             @if ($mark === '○' || $mark === '△')
-              <button wire:click="selectDate('{{ $dateKey }}')" class="text-blue-500 underline">
+              <button wire:click="selectDate('{{ $dateKey }}')" class="text-blue-500 underline block">
                 {{ $mark }}
               </button>
             @else
-              <span class="text-gray-400">{{ $mark }}</span>
+              <span class="text-gray-400 block">{{ $mark }}</span>
             @endif
-            <button wire:click="$emit('openTimeSlotForm', {{ $timeslot->id ?? 'null' }})"
-              class="text-blue-600 underline">
+            <button wire:click="openTimeSlotForm('{{ $dateKey }}')"
+              class="text-blue-600 underline text-xs block mt-1">
               編集
             </button>
 
@@ -65,9 +65,6 @@
       </div>
     @endif
   </div>
-  <button wire:click="$emit('openTimeSlotForm', {{ $timeslot->id ?? 'null' }})" class="text-blue-600 underline">
-    編集
-  </button>
 
   <livewire:time-slot-form />
   {{-- <livewire:time-slot-form :timeslotId="$timeslot->id ?? null" /> --}}

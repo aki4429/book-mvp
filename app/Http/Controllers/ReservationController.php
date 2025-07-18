@@ -22,6 +22,12 @@ class ReservationController extends Controller
         'timeSlots'   => \App\Models\TimeSlot::orderBy('date')->orderBy('start_time')->get(),
         'statuses'    => ['pending','confirmed','canceled','completed'],
         ]);
+
+        // 顧客へ
+Mail::to($reservation->customer->email)->send(new ReservationConfirmed($reservation));
+
+// 管理者へ
+Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reservation));
     }
     public function store(Request $request)
     {

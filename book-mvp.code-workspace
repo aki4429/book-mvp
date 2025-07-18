@@ -1,0 +1,32 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "php.validate.executablePath": "/usr/bin/php",
+        "php.executablePath": "/usr/bin/php",
+        "php.validate.enable": true,
+        "php.validate.run": "onType",
+        "intelephense.files.exclude": [
+            "**/.git/**",
+            "**/.svn/**",
+            "**/.hg/**",
+            "**/CVS/**",
+            "**/.DS_Store/**",
+            "**/node_modules/**",
+            "**/bower_components/**",
+            "**/vendor/**/{Tests,tests,test,Tester,tester}/**"
+        ]
+    },
+    "extensions": {
+        "recommendations": [
+            "bmewburn.vscode-intelephense-client",
+            "bradlc.vscode-tailwindcss",
+            "ryannaddy.laravel-artisan",
+            "onecentlin.laravel-blade",
+            "amiralizadeh9480.laravel-extra-intellisense"
+        ]
+    }
+}
