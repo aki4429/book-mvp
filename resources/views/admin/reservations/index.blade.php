@@ -26,11 +26,7 @@
             <td class="px-4 py-2">{{ $r->id }}</td>
             <td class="px-4 py-2">{{ $r->customer->name }}</td>
             <td class="px-4 py-2">
-              @if ($r->timeSlot)
-                {{ $r->timeSlot->date }} {{ $r->timeSlot->start_time }} - {{ $r->timeSlot->end_time }}
-              @else
-                <span class="text-gray-400 italic">未設定</span>
-              @endif
+              {!! formatJapaneseDateTime($r->timeSlot->date ?? null, $r->timeSlot->start_time ?? null, $r->timeSlot->end_time ?? null) !!}
             </td>
             <td class="px-4 py-2">
               @php
@@ -68,3 +64,33 @@
 
   <div class="mt-4">{{ $reservations->withQueryString()->links() }}</div>
 @endsection
+@push('scripts')
+<script>
+  // No additional JS needed for date formatting, handled in Blade below.
+</script>
+@endpush
+
+@php
+  function formatJapaneseDateTime($date, $start, $end) {
+    if (!$date || !$start || !$end) return '<span class="text-gray-400 italic">未設定</span>';
+    try {
+      $dt = \Carbon\Carbon::parse($date);
+      $startTime = \Carbon\Carbon::parse($start)->format('H:i');
+      $endTime = \Carbon\Carbon::parse($end)->format('H:i');
+      return $dt->format('Y年n月j日') . " {$startTime}-{$endTime}";
+    } catch (\Exception $e) {
+      return '<span class="text-gray-400 italic">未設定</span>';
+    }
+  }
+@endphp
+
+@once
+  @push('blade')
+    @php
+      // Overwrite the timeSlot display in the table above
+      // Find the line: {{ $r->timeSlot->date }} {{ $r->timeSlot->start_time }} - {{ $r->timeSlot->end_time }}
+      // Replace with:
+      // {!! formatJapaneseDateTime($r->timeSlot->date ?? null, $r->timeSlot->start_time ?? null, $r->timeSlot->end_time ?? null) !!}
+    @endphp
+  @endpush
+@endonce
