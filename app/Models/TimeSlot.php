@@ -18,8 +18,7 @@ class TimeSlot extends Model
     // app/Models/TimeSlot.php
     protected $casts = [
         'date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        'available' => 'boolean',
     ];
 
 }
