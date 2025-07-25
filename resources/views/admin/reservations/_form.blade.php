@@ -13,20 +13,21 @@
 
   <div>
     <label class="block text-sm font-medium mb-1">時間枠</label>
-    {{-- <select name="time_slot_id" class="w-full border rounded p-2">
-      @foreach ($timeSlots as $ts)
-        <option value="{{ $ts->id }}" @selected(old('time_slot_id', $reservation->time_slot_id ?? '') == $ts->id)>
-          {{ $ts->slot_date }} {{ $ts->start_time }}-{{ $ts->end_time }}
-        </option>
-      @endforeach
-    </select> --}}
     <select name="time_slot_id" class="w-full border rounded p-2">
+      @php
+        $selectedSlotId = $selectedTimeSlot->id ?? old('time_slot_id', $reservation->time_slot_id ?? '');
+      @endphp
       @foreach ($timeSlots as $slot)
-        <option value="{{ $slot->id }}">
-          {{ $slot->date->format('Y-m-d') }} / {{ $slot->start_time }} - {{ $slot->end_time }}
+        <option value="{{ $slot->id }}" @selected($selectedSlotId == $slot->id)>
+          {{ $slot->formatted_date_time }}
         </option>
       @endforeach
     </select>
+    @if (isset($selectedTimeSlot))
+      <p class="text-xs text-gray-600 mt-1">
+        ※ カレンダーから選択された時間枠です
+      </p>
+    @endif
   </div>
 
   <div>

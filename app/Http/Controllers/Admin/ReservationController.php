@@ -16,6 +16,15 @@ class ReservationController extends Controller
      */
     public function index()
     {
+        // カレンダー表示用のビューを返す
+        return view('admin.reservations.calendar');
+    }
+
+    /**
+     * Display a listing of the resource in list format.
+     */
+    public function list()
+    {
         $reservations = Reservation::with(['customer', 'timeSlot'])
             ->latest('created_at')
             ->paginate(20);   // 20件ずつページネーション
@@ -26,12 +35,18 @@ class ReservationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
+        $selectedTimeSlot = null;
+        if ($request->has('slot_id')) {
+            $selectedTimeSlot = \App\Models\TimeSlot::find($request->get('slot_id'));
+        }
+
         return view('admin.reservations.create', [
             'customers'   => \App\Models\Customer::orderBy('name')->get(),
             'timeSlots'   => \App\Models\TimeSlot::orderBy('date')->orderBy('start_time')->get(),
             'statuses'    => ['pending','confirmed','canceled','completed'],
+            'selectedTimeSlot' => $selectedTimeSlot,
         ]);
     }
 

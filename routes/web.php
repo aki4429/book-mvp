@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\ReservationController as PublicReservationController;
+use App\Http\Controllers\CalendarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,13 +23,20 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// 顧客用パブリックカレンダー（認証不要）
+Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.public');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::get('/calendar', function () {
+Route::get('/admin-calendar', function () {
     return view('calendar');
-})->middleware(['auth'])->name('calendar');
+})->middleware(['auth'])->name('admin.calendar');
+
+Route::get('/test-modal', function () {
+    return view('test-modal');
+})->middleware(['auth'])->name('test-modal');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -46,11 +54,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('reservations', AdminReservationController::class);
-    //   ->only(['index', 'show']);               // 一覧と詳細だけ
-});
-
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    Route::resource('timeslots', \App\Http\Controllers\Admin\TimeSlotController::class);
+    Route::get('reservations-list', [AdminReservationController::class, 'list'])->name('reservations.list');
 });
 
 
@@ -59,6 +63,21 @@ Route::get('/reservations/create', [PublicReservationController::class, 'create'
 Route::post('/reservations', [PublicReservationController::class, 'store'])->name('reservations.store');
 
 // Route::get('/admin/timeslots/form/{timeslotId?}', TimeSlotForm::class)->name('timeslots.form');
+
+Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () {
+    Route::resource('timeslots', \App\Http\Controllers\Admin\TimeSlotController::class)->except(['show']);
+
+    // 一括登録画面表示
+    Route::get('timeslots/bulk-create', [\App\Http\Controllers\Admin\TimeSlotController::class, 'bulkCreate'])->name('timeslots.bulkCreate');
+
+    // 一括登録処理
+    Route::post('timeslots/bulk-store', [\App\Http\Controllers\Admin\TimeSlotController::class, 'bulkStore'])->name('timeslots.bulkStore');
+
+    // プリセット管理
+    Route::resource('presets', \App\Http\Controllers\Admin\TimeSlotPresetController::class)->except(['show']);
+    Route::post('presets/update-order', [\App\Http\Controllers\Admin\TimeSlotPresetController::class, 'updateOrder'])->name('presets.updateOrder');
+});
+
 
 
 require __DIR__.'/auth.php';

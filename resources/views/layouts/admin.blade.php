@@ -2,9 +2,14 @@
 <html lang="ja">
 
 <head>
-  <meta charset="utf-8">
+  <meta char <a href="{{ route('customers.index') }}"
+    class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 
+          {{ request()->routeIs('customers.*') ? 'bg-gray-200 font-semibold' : '' }}">
   <title>@yield('title', 'Dashboard')</title>
+  {{-- Livewireスタイル --}}
   @livewireStyles
+  {{-- Vite assets --}}
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="h-screen flex bg-gray-100">
@@ -24,18 +29,31 @@
       </a>
       <a href="{{ route('admin.timeslots.index') }}"
         class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
-          {{ request()->routeIs('admin.reservations.create') ? 'bg-gray-200 font-semibold' : '' }}">
+          {{ request()->routeIs('admin.timeslots.index') ? 'bg-gray-200 font-semibold' : '' }}">
         <svg class="h-5 w-5 mr-2"><!-- plus icon --></svg>
-        <span>予約枠一覧</span>
+        <span>予約枠管理</span>
       </a>
-      <a href="{{ route('calendar') }}"
+      <a href="{{ route('admin.timeslots.bulkCreate') }}"
         class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
-          {{ request()->routeIs('admin.reservations.create') ? 'bg-gray-200 font-semibold' : '' }}">
+          {{ request()->routeIs('admin.timeslots.bulkCreate') ? 'bg-gray-200 font-semibold' : '' }}">
+        <svg class="h-5 w-5 mr-2"><!-- preset icon --></svg>
+        <span>曜日指定予約</span>
+      </a>
+      <a href="{{ route('admin.presets.index') }}"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          {{ request()->routeIs('admin.presets.*') ? 'bg-gray-200 font-semibold' : '' }}">
+        <svg class="h-5 w-5 mr-2"><!-- preset icon --></svg>
+        <span>プリセット管理</span>
+      </a>
+      <a href="{{ route('admin.calendar') }}"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          {{ request()->routeIs('admin.calendar') ? 'bg-gray-200 font-semibold' : '' }}">
         <svg class="h-5 w-5 mr-2"><!-- plus icon --></svg>
         <span>予約カレンダー</span>
       </a>
-      <a href="{{ route('reservations.index') }}"
-        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 {{ request()->routeIs('reservations.*') ? 'bg-gray-200 font-semibold' : '' }}">
+      <a href="{{ route('admin.reservations.index') }}"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 
+          {{ request()->routeIs('admin.reservations.*') ? 'bg-gray-200 font-semibold' : '' }}">
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
           <use href="#calendar-icon" />
         </svg>
@@ -94,9 +112,11 @@
     </symbol>
   </svg>
 
-  {{-- Vite assets includes Livewire for v3 --}}
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
+  {{-- Livewireスクリプト（Viteより前に読み込み） --}}
   @livewireScripts
+
+  {{-- スタック用のスクリプト --}}
+  @stack('scripts')
 </body>
 
 </html>

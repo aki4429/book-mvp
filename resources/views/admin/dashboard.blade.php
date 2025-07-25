@@ -12,7 +12,7 @@
         // fn($q) => $q->whereBetween('slot_date', [now()->startOfWeek(), now()->endOfWeek()]),
         fn($q) => $q->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()]),
     )->count()" />
-    <livewire:calendar />
+    <livewire:calendar :is-admin="true" />
 
 
   </div>

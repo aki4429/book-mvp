@@ -157,8 +157,4 @@ return [
     */
 
     'pagination_theme' => 'tailwind',
-
-    // 約39行目付近
-    'asset_url' => env('LIVEWIRE_ASSET_URL', null),
-
 ];

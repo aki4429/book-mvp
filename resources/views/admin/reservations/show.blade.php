@@ -14,13 +14,20 @@
     <div class="bg-white p-6 rounded shadow">
       <h3 class="font-semibold mb-2">時間枠</h3>
       @if ($reservation->timeSlot)
-        <p>{{ $reservation->timeSlot->date }}</p>
-        <p>{{ $reservation->timeSlot->start_time }} - {{ $reservation->timeSlot->end_time }}</p>
+        <p><b>予約日時:</b> {{ $reservation->formatted_date_time }}</p>
+        <p><b>定員:</b> {{ $reservation->timeSlot->capacity }}名</p>
+        <p><b>現在の予約数:</b> {{ $reservation->timeSlot->getCurrentReservationCount() }}名</p>
+        <p><b>受付状況:</b>
+          <span
+            class="px-2 py-1 text-xs rounded {{ $reservation->timeSlot->available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+            {{ $reservation->timeSlot->available ? '受付中' : '受付停止' }}
+          </span>
+        </p>
       @else
         <p class="text-gray-500 italic">予約枠情報がありません</p>
       @endif
 
-      <p><b>作成:</b> {{ $reservation->created_at->format('Y-m-d H:i') }}</p>
+      <p><b>作成:</b> {{ $reservation->created_at->format('Y年n月j日 H:i') }}</p>
     </div>
   </div>
 

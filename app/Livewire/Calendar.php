@@ -10,9 +10,11 @@ class Calendar extends Component
 {
     public $year;
     public $month;
-    public $selectedDate = null; // ← 追加
     public $showTimeSlotForm = false;
     public $editingDate = null;
+    public $hoveredDate = null;
+    public $pinnedDate = null; // 固定表示用
+    public $isAdmin = false; // 管理者フラグ
 
     protected $listeners = ['refreshCalendar'];
 
@@ -22,16 +24,29 @@ class Calendar extends Component
         $this->showTimeSlotForm = false;
     }
 
-    public function selectDate($date)
+    public function hydrate()
     {
-        $this->selectedDate = $date;
+        // Livewireコンポーネントが再水和されるたびに実行される
+        logger('Calendar: hydrate called', [
+            'year' => $this->year,
+            'month' => $this->month
+        ]);
+    }
+
+    public function dehydrate()
+    {
+        // Livewireコンポーネントが脱水化されるたびに実行される
+        logger('Calendar: dehydrate called', [
+            'year' => $this->year,
+            'month' => $this->month
+        ]);
     }
 
     public function openTimeSlotForm($date = null, $timeslotId = null)
     {
         $this->editingDate = $date;
         $this->showTimeSlotForm = true;
-        
+
         // その日の既存の予約枠を取得（最初の予約枠を編集対象とする）
         $existingSlot = null;
         if ($date) {
@@ -39,14 +54,67 @@ class Calendar extends Component
                 ->orderBy('start_time')
                 ->first();
         }
-        
+
         $this->dispatch('openTimeSlotForm', $date, $existingSlot ? $existingSlot->id : null);
     }
 
-    public function mount()
+    public function openTimeSlotManager($date)
+    {
+        logger('Calendar: openTimeSlotManager called', ['date' => $date]);
+        $this->dispatch('manageTimeSlots', $date);
+    }
+
+    public function hoverDate($date)
+    {
+        // 固定表示されている場合は、固定日付以外のホバーを無視
+        if ($this->pinnedDate && $this->pinnedDate !== $date) {
+            return;
+        }
+
+        $this->hoveredDate = $date;
+    }
+
+    public function unhoverDate()
+    {
+        // 固定表示されている場合は、ホバー解除を無視
+        if ($this->pinnedDate) {
+            return;
+        }
+
+        $this->hoveredDate = null;
+    }
+
+    public function pinDate($date)
+    {
+        // 同じ日付を再クリックした場合は固定解除
+        if ($this->pinnedDate === $date) {
+            $this->pinnedDate = null;
+            $this->hoveredDate = null;
+        } else {
+            $this->pinnedDate = $date;
+            $this->hoveredDate = $date;
+        }
+    }
+
+    public function clearPin()
+    {
+        $this->pinnedDate = null;
+        $this->hoveredDate = null;
+    }
+
+    public function mount($isAdmin = null)
     {
         $this->year  = now()->year;
         $this->month = now()->month;
+
+        // isAdminパラメータが明示的に設定されている場合はそれを使用
+        // そうでなければ、認証されたユーザーがいるかどうかで判断（簡易的な管理者判定）
+        if ($isAdmin !== null) {
+            $this->isAdmin = $isAdmin;
+        } else {
+            // 管理者レイアウトを使用しているページまたは認証済みユーザーを管理者とみなす
+            $this->isAdmin = auth()->check();
+        }
     }
 
     public function prevMonth()
@@ -54,6 +122,17 @@ class Calendar extends Component
         $date = Carbon::create($this->year, $this->month, 1)->subMonth();
         $this->year = $date->year;
         $this->month = $date->month;
+
+        // 月を移動した際にhover/pin状態をリセット
+        $this->reset(['hoveredDate', 'pinnedDate']);
+
+        // コンポーネントの再描画を強制
+        $this->skipRender = false;
+
+        logger('Calendar: prevMonth executed', [
+            'new_year' => $this->year,
+            'new_month' => $this->month
+        ]);
     }
 
     public function nextMonth()
@@ -61,9 +140,13 @@ class Calendar extends Component
         $date = Carbon::create($this->year, $this->month, 1)->addMonth();
         $this->year = $date->year;
         $this->month = $date->month;
-    }
 
-    public function render()
+        // 月を移動した際にhover/pin状態をリセット
+        $this->reset(['hoveredDate', 'pinnedDate']);
+
+        // コンポーネントの再描画を強制
+        $this->skipRender = false;
+    }    public function render()
     {
         $first  = Carbon::create($this->year, $this->month, 1);
         $start  = $first->copy()->startOfWeek(Carbon::SUNDAY);
@@ -96,17 +179,17 @@ class Calendar extends Component
         return $slot->date->format('Y-m-d');
     });
 
-
-
         return view('livewire.calendar', [
             'weeks'        => $weeks,
             'currentMonth' => $first,
             'year'         => $this->year,
             'month'        => $this->month,
             'slots' => $slots,
-            'selectedDate'  => $this->selectedDate, // ← 追加
             'showTimeSlotForm' => $this->showTimeSlotForm,
             'editingDate' => $this->editingDate,
+            'hoveredDate' => $this->hoveredDate,
+            'pinnedDate' => $this->pinnedDate,
+            'isAdmin' => $this->isAdmin,
         ]);
     }
 
