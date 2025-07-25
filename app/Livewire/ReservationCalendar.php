@@ -87,8 +87,8 @@ class ReservationCalendar extends Component
 
     public function createReservationForSlot($timeSlotId)
     {
-        $this->selectedTimeSlot = TimeSlot::find($timeSlotId);
-        $this->showCreateReservation = true;
+        // 管理者の場合は直接予約作成ページにリダイレクト
+        return redirect()->route('admin.reservations.create', ['slot_id' => $timeSlotId]);
     }
 
     public function closeCreateReservation()

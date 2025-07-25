@@ -26,19 +26,44 @@ Route::get('/', function () {
 // 顧客用パブリックカレンダー（認証不要）
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.public');
 
+// 顧客認証ルート
+Route::prefix('customer')->name('customer.')->group(function () {
+    // 未認証でアクセス可能
+    Route::middleware('guest:customer')->group(function () {
+        Route::get('/login', [App\Http\Controllers\Customer\AuthController::class, 'showLoginForm'])->name('login');
+        Route::post('/register', [App\Http\Controllers\Customer\AuthController::class, 'register'])->name('register');
+        Route::post('/login', [App\Http\Controllers\Customer\AuthController::class, 'login'])->name('login.post');
+    });
+
+    // 顧客認証が必要
+    Route::middleware('auth:customer')->group(function () {
+        Route::get('/dashboard', [App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/logout', [App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('logout');
+
+        // 顧客の予約管理（自分の予約のみ）
+        Route::get('/reservations', [App\Http\Controllers\Customer\ReservationController::class, 'index'])->name('reservations.index');
+        Route::get('/reservations/create', [App\Http\Controllers\Customer\ReservationController::class, 'create'])->name('reservations.create');
+        Route::post('/reservations', [App\Http\Controllers\Customer\ReservationController::class, 'store'])->name('reservations.store');
+        Route::get('/reservations/{reservation}', [App\Http\Controllers\Customer\ReservationController::class, 'show'])->name('reservations.show');
+        Route::post('/reservations/{reservation}/cancel', [App\Http\Controllers\Customer\ReservationController::class, 'cancel'])->name('reservations.cancel');
+    });
+});
+
+// 管理者用ダッシュボード（管理者のみアクセス可能）
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['admin', 'verified'])->name('dashboard');
 
+// 管理者専用ルート（admin ミドルウェアで管理者のみアクセス可能）
 Route::get('/admin-calendar', function () {
     return view('calendar');
-})->middleware(['auth'])->name('admin.calendar');
+})->middleware(['admin'])->name('admin.calendar');
 
 Route::get('/test-modal', function () {
     return view('test-modal');
-})->middleware(['auth'])->name('test-modal');
+})->middleware(['admin'])->name('test-modal');
 
-Route::middleware('auth')->group(function () {
+Route::middleware('admin')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -46,25 +71,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
 });
 
-// routes/web.php
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+// 管理者ダッシュボード
+Route::middleware(['admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
-
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+// 管理者の予約管理
+Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('reservations', AdminReservationController::class);
     Route::get('reservations-list', [AdminReservationController::class, 'list'])->name('reservations.list');
 });
 
+// パブリック予約作成（非推奨 - 顧客認証推奨）
+// Route::get('/reservations/create', [PublicReservationController::class, 'create'])->name('reservations.create');
+// Route::post('/reservations', [PublicReservationController::class, 'store'])->name('reservations.store');
 
-
-Route::get('/reservations/create', [PublicReservationController::class, 'create'])->name('reservations.create');
-Route::post('/reservations', [PublicReservationController::class, 'store'])->name('reservations.store');
-
-// Route::get('/admin/timeslots/form/{timeslotId?}', TimeSlotForm::class)->name('timeslots.form');
-
-Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () {
+// 管理者の時間枠管理
+Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function () {
     Route::resource('timeslots', \App\Http\Controllers\Admin\TimeSlotController::class)->except(['show']);
 
     // 一括登録画面表示
@@ -76,6 +99,10 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     // プリセット管理
     Route::resource('presets', \App\Http\Controllers\Admin\TimeSlotPresetController::class)->except(['show']);
     Route::post('presets/update-order', [\App\Http\Controllers\Admin\TimeSlotPresetController::class, 'updateOrder'])->name('presets.updateOrder');
+
+    // システム設定
+    Route::get('settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
 });
 
 

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Carbon\Carbon;
 use App\Models\TimeSlot;
+use App\Models\Setting;
 
 class Calendar extends Component
 {
@@ -86,13 +87,27 @@ class Calendar extends Component
 
     public function pinDate($date)
     {
+        logger('Calendar: pinDate called', ['date' => $date, 'currentPinnedDate' => $this->pinnedDate]);
+
+        // 予約可能日をチェック
+        $reservationAdvanceDays = Setting::get('reservation_advance_days', 0);
+        $reservationStartDate = Carbon::today()->addDays($reservationAdvanceDays);
+        $selectedDate = Carbon::parse($date);
+
+        if ($selectedDate->lt($reservationStartDate)) {
+            logger('Calendar: pin blocked - reservation not allowed', ['date' => $date]);
+            return; // 予約不可日はクリックを無視
+        }
+
         // 同じ日付を再クリックした場合は固定解除
         if ($this->pinnedDate === $date) {
             $this->pinnedDate = null;
             $this->hoveredDate = null;
+            logger('Calendar: pin cleared');
         } else {
             $this->pinnedDate = $date;
             $this->hoveredDate = $date;
+            logger('Calendar: pin set', ['pinnedDate' => $this->pinnedDate]);
         }
     }
 
@@ -104,6 +119,8 @@ class Calendar extends Component
 
     public function mount($isAdmin = null)
     {
+        logger('Calendar: mount called', ['isAdmin' => $isAdmin]);
+
         $this->year  = now()->year;
         $this->month = now()->month;
 
@@ -115,6 +132,8 @@ class Calendar extends Component
             // 管理者レイアウトを使用しているページまたは認証済みユーザーを管理者とみなす
             $this->isAdmin = auth()->check();
         }
+
+        logger('Calendar: mount completed', ['isAdmin' => $this->isAdmin, 'year' => $this->year, 'month' => $this->month]);
     }
 
     public function prevMonth()
@@ -172,12 +191,16 @@ class Calendar extends Component
         //     ->keyBy(fn ($slot) => $slot->date->format('Y-m-d'));
 
         $slots = TimeSlot::whereBetween('date', [$start, $end])
-    ->orderBy('date')
-    ->orderBy('start_time')
-    ->get()
-    ->groupBy(function ($slot) {
-        return $slot->date->format('Y-m-d');
-    });
+            ->orderBy('date')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy(function ($slot) {
+                return $slot->date->format('Y-m-d');
+            });
+
+        // 予約可能開始日を取得
+        $reservationAdvanceDays = Setting::get('reservation_advance_days', 0);
+        $reservationStartDate = Carbon::today()->addDays($reservationAdvanceDays);
 
         return view('livewire.calendar', [
             'weeks'        => $weeks,
@@ -190,6 +213,7 @@ class Calendar extends Component
             'hoveredDate' => $this->hoveredDate,
             'pinnedDate' => $this->pinnedDate,
             'isAdmin' => $this->isAdmin,
+            'reservationStartDate' => $reservationStartDate,
         ]);
     }
 

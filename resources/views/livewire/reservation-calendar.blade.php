@@ -322,50 +322,5 @@
         </div>
       </div>
     @endif
-
-    <!-- 予約作成モーダル -->
-    @if ($showCreateReservation && $selectedTimeSlot)
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        wire:click="closeCreateReservation">
-        <div class="bg-white p-6 rounded-lg max-w-md w-full mx-4" wire:click.stop>
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold">新規予約作成</h3>
-            <button wire:click="closeCreateReservation" class="text-gray-400 hover:text-gray-600">
-              ✕
-            </button>
-          </div>
-
-          <div class="space-y-3 mb-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">選択した時間枠</label>
-              <div class="p-3 bg-blue-50 rounded-lg border">
-                <p class="text-sm font-medium text-blue-900">
-                  {{ $selectedTimeSlot->date->format('Y年n月j日') }}
-                </p>
-                <p class="text-sm text-blue-700">
-                  {{ $selectedTimeSlot->start_time_as_object->format('H:i') }} -
-                  {{ $selectedTimeSlot->end_time_as_object->format('H:i') }}
-                </p>
-                <p class="text-xs text-blue-600 mt-1">
-                  残り {{ $selectedTimeSlot->capacity - $selectedTimeSlot->reservations->count() }} 名分の空きがあります
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end space-x-2">
-            <button
-              onclick="window.location.href='{{ route('admin.reservations.create', ['slot_id' => $selectedTimeSlot->id ?? '']) }}'"
-              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-              予約作成画面へ
-            </button>
-            <button wire:click="closeCreateReservation"
-              class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
-              キャンセル
-            </button>
-          </div>
-        </div>
-      </div>
-    @endif
   </div>
 </div>

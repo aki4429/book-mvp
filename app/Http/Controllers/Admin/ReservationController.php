@@ -56,22 +56,50 @@ class ReservationController extends Controller
      */
     public function store(Request $request)
     {
+        // 新規顧客作成か既存顧客選択かを判定
+        if ($request->filled('new_customer')) {
+            // 新規顧客の場合
+            $customerData = $request->validate([
+                'customer_name' => ['required', 'string', 'max:255'],
+                'customer_email' => ['required', 'email', 'max:255', 'unique:customers,email'],
+                'customer_phone' => ['nullable', 'string', 'max:255'],
+            ]);
+
+            $customer = \App\Models\Customer::create([
+                'name' => $customerData['customer_name'],
+                'email' => $customerData['customer_email'],
+                'phone' => $customerData['customer_phone'],
+            ]);
+
+            $customerId = $customer->id;
+        } else {
+            // 既存顧客の場合
+            $request->validate([
+                'customer_id' => ['required', 'exists:customers,id'],
+            ]);
+            $customerId = $request->customer_id;
+        }
+
         $data = $request->validate([
-            'customer_id'  => ['required','exists:customers,id'],
             'time_slot_id' => ['required','exists:time_slots,id'],
             'status'       => ['required','in:pending,confirmed,canceled,completed'],
             'notes'        => ['nullable','string'],
         ]);
 
+        $data['customer_id'] = $customerId;
         $data['created_by'] = auth()->id();
 
         $reservation = \App\Models\Reservation::create($data);
 
         // 顧客へのサンクスメール
-        Mail::to($reservation->customer->email)->send(new ReservationConfirmed($reservation));
+        if ($reservation->customer->email) {
+            Mail::to($reservation->customer->email)->send(new ReservationConfirmed($reservation));
+        }
 
         // 管理者への通知メール
-        Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reservation));
+        if (config('mail.admin_address')) {
+            Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reservation));
+        }
 
         return redirect()
             ->route('admin.reservations.index')
