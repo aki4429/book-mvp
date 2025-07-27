@@ -131,7 +131,7 @@ class Calendar extends Component
     public function mount($isAdmin = null, $isReservationManagement = false)
     {
         logger('Calendar: mount called', ['isAdmin' => $isAdmin, 'isReservationManagement' => $isReservationManagement]);
-        
+
         $this->year  = now()->year;
         $this->month = now()->month;
 
@@ -146,7 +146,7 @@ class Calendar extends Component
             // 管理者レイアウトを使用しているページまたは認証済みユーザーを管理者とみなす
             $this->isAdmin = auth()->check();
         }
-        
+
         logger('Calendar: mount completed', ['isAdmin' => $this->isAdmin, 'isReservationManagement' => $this->isReservationManagement, 'year' => $this->year, 'month' => $this->month]);
     }    public function prevMonth()
     {

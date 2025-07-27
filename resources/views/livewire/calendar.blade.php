@@ -114,8 +114,8 @@
             }
           @endphp
 
-          <div class="{{ $cellClasses }}" 
-            @if(!$isReservationManagement) wire:mouseenter="hoverDate('{{ $dateKey }}')" wire:mouseleave="unhoverDate()" @endif
+          <div class="{{ $cellClasses }}"
+            @if (!$isReservationManagement) wire:mouseenter="hoverDate('{{ $dateKey }}')" wire:mouseleave="unhoverDate()" @endif
             wire:click="pinDate('{{ $dateKey }}')">
             <div>{{ $day->format('j') }}</div>
 
@@ -164,7 +164,7 @@
           @endphp
           <div
             class="p-4 border rounded-lg shadow-sm {{ $isPinned ? 'bg-blue-100 border-blue-300' : 'bg-blue-50' }} transition-all duration-200"
-            @if(!$isReservationManagement) wire:mouseenter="hoverDate('{{ $hoveredDate }}')" wire:mouseleave="unhoverDate()" @endif>
+            @if (!$isReservationManagement) wire:mouseenter="hoverDate('{{ $hoveredDate }}')" wire:mouseleave="unhoverDate()" @endif>
             <div class="flex justify-between items-center mb-3">
               <h3 class="font-semibold text-gray-900">
                 {{ \Carbon\Carbon::parse($hoveredDate)->format('Y年n月j日') }}
