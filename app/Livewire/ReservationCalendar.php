@@ -46,6 +46,9 @@ class ReservationCalendar extends Component
 
     public function hoverDate($date)
     {
+        // 予約管理カレンダーではホバー表示を無効にする
+        return;
+        
         // 固定表示されている場合は、固定日付以外のホバーを無視
         if ($this->pinnedDate && $this->pinnedDate !== $date) {
             return;
@@ -57,6 +60,9 @@ class ReservationCalendar extends Component
 
     public function unhoverDate()
     {
+        // 予約管理カレンダーではホバー表示を無効にする
+        return;
+        
         // 固定表示されている場合はホバー解除を無視
         if ($this->pinnedDate) {
             return;

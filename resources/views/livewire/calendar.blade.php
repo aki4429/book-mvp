@@ -1,4 +1,4 @@
-<div>
+<div class="prevent-scroll-jump">
   <div class="p-4">
     <!-- ヘッダー部分 -->
     <div class="flex justify-between items-center mb-4">
@@ -114,8 +114,9 @@
             }
           @endphp
 
-          <div class="{{ $cellClasses }}" wire:mouseenter="hoverDate('{{ $dateKey }}')"
-            wire:mouseleave="unhoverDate()" wire:click="pinDate('{{ $dateKey }}')">
+          <div class="{{ $cellClasses }}" 
+            @if(!$isReservationManagement) wire:mouseenter="hoverDate('{{ $dateKey }}')" wire:mouseleave="unhoverDate()" @endif
+            wire:click="pinDate('{{ $dateKey }}')">
             <div>{{ $day->format('j') }}</div>
 
             @if ($isAdmin)
@@ -153,99 +154,113 @@
     </div>
 
     {{-- ホバー時・固定時の予約可能時間表示 --}}
-    @if ($hoveredDate)
-      @php
-        $hoveredSlots = $slots[$hoveredDate] ?? collect();
-        $isPinned = $pinnedDate === $hoveredDate;
-      @endphp
-      <div
-        class="mt-6 p-4 border rounded-lg shadow-sm {{ $isPinned ? 'bg-blue-100 border-blue-300' : 'bg-blue-50' }} transition-all duration-200"
-        wire:mouseenter="hoverDate('{{ $hoveredDate }}')" wire:mouseleave="unhoverDate()">
-        <div class="flex justify-between items-center mb-3">
-          <h3 class="font-semibold text-gray-900">
-            {{ \Carbon\Carbon::parse($hoveredDate)->format('Y年n月j日') }}
-            @if ($isAdmin)
-              の時間枠詳細
-            @else
-              の予約可能時間
-            @endif
-          </h3>
-          @if ($isPinned)
-            <div class="flex items-center space-x-2">
-              <span class="text-xs text-blue-600 bg-blue-200 px-2 py-1 rounded">固定表示中</span>
-              <button wire:click="clearPin()" class="text-xs text-gray-500 hover:text-gray-700 underline">
-                ✕ 閉じる
-              </button>
-            </div>
-          @else
-            <span class="text-xs text-gray-500">
-              📌 クリックで固定表示
-            </span>
-          @endif
-        </div>
-
-        @if ($isAdmin)
-          {{-- 管理者向け：すべての時間枠を表示 --}}
-          @forelse ($hoveredSlots as $slot)
-            @php
-              $reservedCount = $slot->getCurrentReservationCount();
-              $availableCount = $slot->capacity - $reservedCount;
-              $isAvailable = $availableCount > 0;
-            @endphp
-            <div
-              class="inline-block mr-2 mb-2 px-4 py-2 bg-white border rounded-lg text-sm {{ $isAvailable ? 'border-blue-200' : 'border-red-200' }}">
-              <div class="font-medium {{ $isAvailable ? 'text-blue-700' : 'text-red-700' }}">
-                {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
-              </div>
-              <div class="text-xs text-gray-600">
-                予約: {{ $reservedCount }}/{{ $slot->capacity }}名
-              </div>
-              @if ($isAvailable)
-                <div class="text-xs text-blue-600">
-                  空き: {{ $availableCount }}名
+    <div class="mt-6">
+      {{-- 固定高さのコンテナでスクロール防止 --}}
+      <div class="min-h-[180px] smooth-layout">
+        @if ($hoveredDate)
+          @php
+            $hoveredSlots = $slots[$hoveredDate] ?? collect();
+            $isPinned = $pinnedDate === $hoveredDate;
+          @endphp
+          <div
+            class="p-4 border rounded-lg shadow-sm {{ $isPinned ? 'bg-blue-100 border-blue-300' : 'bg-blue-50' }} transition-all duration-200"
+            @if(!$isReservationManagement) wire:mouseenter="hoverDate('{{ $hoveredDate }}')" wire:mouseleave="unhoverDate()" @endif>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-900">
+                {{ \Carbon\Carbon::parse($hoveredDate)->format('Y年n月j日') }}
+                @if ($isAdmin)
+                  の時間枠詳細
+                @else
+                  の予約可能時間
+                @endif
+              </h3>
+              @if ($isPinned)
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs text-blue-600 bg-blue-200 px-2 py-1 rounded">固定表示中</span>
+                  <button wire:click="clearPin()" class="text-xs text-gray-500 hover:text-gray-700 underline">
+                    ✕ 閉じる
+                  </button>
                 </div>
               @else
-                <div class="text-xs text-red-600">
-                  満員
-                </div>
+                <span class="text-xs text-gray-500">
+                  📌 クリックで固定表示
+                </span>
               @endif
             </div>
-          @empty
-            <div class="text-gray-600 text-sm">この日は時間枠が設定されていません</div>
-          @endforelse
+
+            {{-- スクロール可能な時間枠一覧 --}}
+            <div class="max-h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-2">
+              @if ($isAdmin)
+                {{-- 管理者向け：すべての時間枠を表示 --}}
+                @forelse ($hoveredSlots as $slot)
+                  @php
+                    $reservedCount = $slot->getCurrentReservationCount();
+                    $availableCount = $slot->capacity - $reservedCount;
+                    $isAvailable = $availableCount > 0;
+                  @endphp
+                  <div
+                    class="inline-block mr-2 mb-2 px-4 py-2 bg-white border rounded-lg text-sm {{ $isAvailable ? 'border-blue-200' : 'border-red-200' }}">
+                    <div class="font-medium {{ $isAvailable ? 'text-blue-700' : 'text-red-700' }}">
+                      {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                    </div>
+                    <div class="text-xs text-gray-600">
+                      予約: {{ $reservedCount }}/{{ $slot->capacity }}名
+                    </div>
+                    @if ($isAvailable)
+                      <div class="text-xs text-blue-600">
+                        空き: {{ $availableCount }}名
+                      </div>
+                    @else
+                      <div class="text-xs text-red-600">
+                        満員
+                      </div>
+                    @endif
+                  </div>
+                @empty
+                  <div class="text-gray-600 text-sm">この日は時間枠が設定されていません</div>
+                @endforelse
+              @else
+                {{-- 顧客向け：予約可能な時間枠のみ表示 --}}
+                @forelse ($hoveredSlots->where('available', true) as $slot)
+                  @auth('customer')
+                    <a href="{{ route('customer.reservations.create', ['slot_id' => $slot->id]) }}"
+                      class="inline-block mr-2 mb-2 px-4 py-2 bg-white border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition-colors duration-200 shadow-sm">
+                      <div class="font-medium text-blue-700">
+                        {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        空き: {{ $slot->capacity - $slot->getCurrentReservationCount() }}/{{ $slot->capacity }}名
+                      </div>
+                    </a>
+                  @else
+                    <a href="{{ route('customer.login') }}"
+                      class="inline-block mr-2 mb-2 px-4 py-2 bg-white border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition-colors duration-200 shadow-sm">
+                      <div class="font-medium text-blue-700">
+                        {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        空き: {{ $slot->capacity - $slot->getCurrentReservationCount() }}/{{ $slot->capacity }}名
+                      </div>
+                      <div class="text-xs text-orange-600 font-medium">
+                        ログインが必要です
+                      </div>
+                    </a>
+                  @endauth
+                @empty
+                  <div class="text-gray-600 text-sm">この日は予約可能な時間がありません</div>
+                @endforelse
+              @endif
+            </div>
+          </div>
         @else
-          {{-- 顧客向け：予約可能な時間枠のみ表示 --}}
-          @forelse ($hoveredSlots->where('available', true) as $slot)
-            @auth('customer')
-              <a href="{{ route('customer.reservations.create', ['slot_id' => $slot->id]) }}"
-                class="inline-block mr-2 mb-2 px-4 py-2 bg-white border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition-colors duration-200 shadow-sm">
-                <div class="font-medium text-blue-700">
-                  {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
-                </div>
-                <div class="text-xs text-gray-600">
-                  空き: {{ $slot->capacity - $slot->getCurrentReservationCount() }}/{{ $slot->capacity }}名
-                </div>
-              </a>
-            @else
-              <a href="{{ route('customer.login') }}"
-                class="inline-block mr-2 mb-2 px-4 py-2 bg-white border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition-colors duration-200 shadow-sm">
-                <div class="font-medium text-blue-700">
-                  {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
-                </div>
-                <div class="text-xs text-gray-600">
-                  空き: {{ $slot->capacity - $slot->getCurrentReservationCount() }}/{{ $slot->capacity }}名
-                </div>
-                <div class="text-xs text-orange-600 font-medium">
-                  ログインが必要です
-                </div>
-              </a>
-            @endauth
-          @empty
-            <div class="text-gray-600 text-sm">この日は予約可能な時間がありません</div>
-          @endforelse
+          {{-- 空の状態でも同じ高さを保持 --}}
+          <div class="p-4 border border-transparent rounded-lg opacity-0 pointer-events-none">
+            <div class="h-6 mb-3"></div>
+            <div class="h-16"></div>
+          </div>
         @endif
       </div>
-    @endif
+    </div>
   </div>
 
   @if ($isAdmin)

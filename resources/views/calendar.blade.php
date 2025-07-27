@@ -9,7 +9,7 @@
     </div>
 
     <div class="bg-white rounded-lg shadow p-6">
-      @livewire('calendar', ['isAdmin' => true])
+      @livewire('calendar', ['isAdmin' => true, 'isReservationManagement' => false])
     </div>
   </div>
 @endsection

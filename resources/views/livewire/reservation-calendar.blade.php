@@ -58,7 +58,6 @@
 
           <div
             class="border min-h-[100px] p-2 text-sm relative hover:bg-blue-100 transition-colors duration-200 cursor-pointer {{ $pinnedDate === $dateKey ? 'bg-blue-200 border-blue-400' : $bgColor }}"
-            wire:mouseenter="hoverDate('{{ $dateKey }}')" wire:mouseleave="unhoverDate()"
             wire:click="pinDate('{{ $dateKey }}')">
 
             <div class="font-medium {{ $day->month !== $month ? 'text-gray-400' : 'text-gray-900' }}">
@@ -123,8 +122,7 @@
         $isPinned = $pinnedDate === $hoveredDate;
       @endphp
       <div
-        class="mt-6 p-4 border rounded-lg shadow-sm {{ $isPinned ? 'bg-blue-100 border-blue-300' : 'bg-blue-50' }} transition-all duration-200"
-        wire:mouseenter="hoverDate('{{ $hoveredDate }}')" wire:mouseleave="unhoverDate()">
+        class="mt-6 p-4 border rounded-lg shadow-sm {{ $isPinned ? 'bg-blue-100 border-blue-300' : 'bg-blue-50' }} transition-all duration-200">
 
         <div class="flex justify-between items-center mb-3">
           <h3 class="font-semibold text-gray-900">

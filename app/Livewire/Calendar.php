@@ -16,6 +16,7 @@ class Calendar extends Component
     public $hoveredDate = null;
     public $pinnedDate = null; // 固定表示用
     public $isAdmin = false; // 管理者フラグ
+    public $isReservationManagement = false; // 予約管理カレンダーフラグ
 
     protected $listeners = ['refreshCalendar'];
 
@@ -67,6 +68,11 @@ class Calendar extends Component
 
     public function hoverDate($date)
     {
+        // 予約管理カレンダーの場合はホバー表示を無効
+        if ($this->isReservationManagement) {
+            return;
+        }
+
         // 固定表示されている場合は、固定日付以外のホバーを無視
         if ($this->pinnedDate && $this->pinnedDate !== $date) {
             return;
@@ -77,6 +83,11 @@ class Calendar extends Component
 
     public function unhoverDate()
     {
+        // 予約管理カレンダーの場合はホバー表示を無効
+        if ($this->isReservationManagement) {
+            return;
+        }
+
         // 固定表示されている場合は、ホバー解除を無視
         if ($this->pinnedDate) {
             return;
@@ -117,12 +128,15 @@ class Calendar extends Component
         $this->hoveredDate = null;
     }
 
-    public function mount($isAdmin = null)
+    public function mount($isAdmin = null, $isReservationManagement = false)
     {
-        logger('Calendar: mount called', ['isAdmin' => $isAdmin]);
-
+        logger('Calendar: mount called', ['isAdmin' => $isAdmin, 'isReservationManagement' => $isReservationManagement]);
+        
         $this->year  = now()->year;
         $this->month = now()->month;
+
+        // 予約管理カレンダーのフラグを設定
+        $this->isReservationManagement = $isReservationManagement;
 
         // isAdminパラメータが明示的に設定されている場合はそれを使用
         // そうでなければ、認証されたユーザーがいるかどうかで判断（簡易的な管理者判定）
@@ -132,11 +146,9 @@ class Calendar extends Component
             // 管理者レイアウトを使用しているページまたは認証済みユーザーを管理者とみなす
             $this->isAdmin = auth()->check();
         }
-
-        logger('Calendar: mount completed', ['isAdmin' => $this->isAdmin, 'year' => $this->year, 'month' => $this->month]);
-    }
-
-    public function prevMonth()
+        
+        logger('Calendar: mount completed', ['isAdmin' => $this->isAdmin, 'isReservationManagement' => $this->isReservationManagement, 'year' => $this->year, 'month' => $this->month]);
+    }    public function prevMonth()
     {
         $date = Carbon::create($this->year, $this->month, 1)->subMonth();
         $this->year = $date->year;
@@ -213,6 +225,7 @@ class Calendar extends Component
             'hoveredDate' => $this->hoveredDate,
             'pinnedDate' => $this->pinnedDate,
             'isAdmin' => $this->isAdmin,
+            'isReservationManagement' => $this->isReservationManagement,
             'reservationStartDate' => $reservationStartDate,
         ]);
     }
