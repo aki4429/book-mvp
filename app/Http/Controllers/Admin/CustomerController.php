@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Customer;
+use App\Models\User;
 
 class CustomerController extends Controller
 {
@@ -13,8 +13,9 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        //
-        $customers = Customer::latest('created_at')
+        // 管理者でないユーザー（顧客）のみを表示
+        $customers = User::where('is_admin', false)
+           ->latest('created_at')
            ->paginate(20);   // 20件ずつページネーション
 
         return view('admin.customers.index', compact('customers'));

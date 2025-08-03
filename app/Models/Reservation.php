@@ -20,7 +20,13 @@ class Reservation extends Model
     // ── リレーション ──
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+
+    // 別名でアクセスしやすくするためのリレーション
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'customer_id');
     }
 
     public function timeSlot()

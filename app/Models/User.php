@@ -20,8 +20,10 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'is_admin',
+        'email_verified_at',
     ];
 
     /**
@@ -51,5 +53,13 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->is_admin;
+    }
+
+    /**
+     * 予約との関係
+     */
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class, 'customer_id');
     }
 }

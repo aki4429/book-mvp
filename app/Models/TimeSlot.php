@@ -32,11 +32,11 @@ class TimeSlot extends Model
     }
 
     /**
-     * 現在の予約数を取得
+     * 現在の確定予約数を取得（confirmedステータスのもののみ）
      */
     public function getCurrentReservationCount()
     {
-        return $this->reservations()->count();
+        return $this->reservations()->where('status', 'confirmed')->count();
     }
 
     /**

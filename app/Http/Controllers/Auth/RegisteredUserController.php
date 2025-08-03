@@ -33,18 +33,25 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['required', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
+
+        // セッションに保存された時間枠IDがある場合は予約画面へ
+        if (session('intended_slot_id')) {
+            return redirect()->route('reservations.create', ['slot_id' => session('intended_slot_id')]);
+        }
 
         return redirect(RouteServiceProvider::HOME);
     }

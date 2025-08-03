@@ -6,8 +6,6 @@
     class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 
           {{ request()->routeIs('customers.*') ? 'bg-gray-200 font-semibold' : '' }}">
   <title>@yield('title', 'Dashboard')</title>
-  {{-- Livewireスタイル --}}
-  @livewireStyles
   {{-- Vite assets --}}
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -125,9 +123,6 @@
       <path stroke-linecap="round" stroke-linejoin="round" d="M16 3.13a4 4 0 010 7.75" />
     </symbol>
   </svg>
-
-  {{-- Livewireスクリプト（Viteより前に読み込み） --}}
-  @livewireScripts
 
   {{-- スタック用のスクリプト --}}
   @stack('scripts')

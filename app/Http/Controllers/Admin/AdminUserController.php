@@ -15,7 +15,8 @@ class AdminUserController extends Controller
      */
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(15);
+        // 管理者のみを表示
+        $users = User::where('is_admin', true)->orderBy('created_at', 'desc')->paginate(15);
         return view('admin.users.index', compact('users'));
     }
 

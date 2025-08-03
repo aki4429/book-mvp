@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\ReservationController as PublicReservationController;
+use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\PublicCalendarController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,8 +25,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// 顧客用パブリックカレンダー（認証不要）
-Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.public');
+// 顧客用パブリックカレンダー（認証不要）- Livewireなし版
+Route::get('/calendar', [PublicCalendarController::class, 'index'])->name('calendar.public');
+Route::get('/calendar/change-month', [PublicCalendarController::class, 'changeMonth'])->name('calendar.change-month');
+Route::get('/calendar/day-slots', [PublicCalendarController::class, 'getDaySlots'])->name('calendar.day-slots');
+
+// 旧Livewire版（バックアップ）
+Route::get('/calendar-livewire', [CalendarController::class, 'index'])->name('calendar.livewire');
 
 // 顧客認証ルート
 Route::prefix('customer')->name('customer.')->group(function () {
@@ -82,9 +89,9 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('reservations-list', [AdminReservationController::class, 'list'])->name('reservations.list');
 });
 
-// パブリック予約作成（非推奨 - 顧客認証推奨）
-// Route::get('/reservations/create', [PublicReservationController::class, 'create'])->name('reservations.create');
-// Route::post('/reservations', [PublicReservationController::class, 'store'])->name('reservations.store');
+// パブリック予約作成
+Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
+Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
 
 // 管理者の時間枠管理
 Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function () {

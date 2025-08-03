@@ -5,29 +5,43 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Reservation;
-use App\Models\Customer;
+use App\Models\User;
+use App\Models\TimeSlot;
 
 class ReservationController extends Controller
 {
     public function create(Request $request)
     {
-        $slotId = $request->input('slot_id');
+        // ログインチェック - 未ログインの場合はログイン画面にリダイレクト
+        if (!auth()->check()) {
+            $slotId = $request->input('slot_id');
+            // slot_idをセッションに保存してログイン後に復元
+            if ($slotId) {
+                session(['intended_slot_id' => $slotId]);
+            }
+            return redirect()->route('auth.choice')->with('info', '予約をするにはログインまたは新規登録が必要です。');
+        }
+
+        $slotId = $request->input('slot_id') ?: session('intended_slot_id');
+        
+        if (!$slotId) {
+            return redirect()->route('calendar.public')->with('error', '時間枠が選択されていません。');
+        }
+
+        // セッションから削除
+        session()->forget('intended_slot_id');
 
         $slot = \App\Models\TimeSlot::findOrFail($slotId);
+        
+        // 時間枠が利用可能かチェック
+        if (!$slot->available) {
+            return redirect()->route('calendar.public')->with('error', 'この時間枠は既に予約されています。');
+        }
 
         return view('reservations.create', [
             'slot' => $slot,
-                   'reservation' => new \App\Models\Reservation(),
-        'customers'   => \App\Models\Customer::orderBy('name')->get(),
-        'timeSlots'   => \App\Models\TimeSlot::orderBy('date')->orderBy('start_time')->get(),
-        'statuses'    => ['pending','confirmed','canceled','completed'],
+            'reservation' => new \App\Models\Reservation(),
         ]);
-
-        // 顧客へ
-Mail::to($reservation->customer->email)->send(new ReservationConfirmed($reservation));
-
-// 管理者へ
-Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reservation));
     }
     public function store(Request $request)
     {
@@ -52,20 +66,26 @@ Mail::to(config('mail.admin_address'))->send(new ReservationNotification($reserv
         'notes'        => ['nullable', 'string'],
     ]);
 
-        // 既存の顧客がいれば再利用、いなければ作成
-        $customer = Customer::firstOrCreate(
+        // 既存のユーザーがいれば再利用、いなければ作成
+        $user = User::firstOrCreate(
             ['email' => $data['email']],
-            ['name' => $data['name'], 'phone' => $data['phone']]
+            ['name' => $data['name'], 'phone' => $data['phone'], 'is_admin' => false]
         );
 
-        Reservation::create([
-            'customer_id'  => $customer->id,
+        // TimeSlotを取得
+        $slot = TimeSlot::findOrFail($data['time_slot_id']);
+
+        $reservation = Reservation::create([
+            'customer_id'  => $user->id,
             'time_slot_id' => $data['time_slot_id'],
-            'status'       => 'pending',
+            'status'       => 'confirmed',
             'notes'        => $data['notes'] ?? null,
         ]);
 
-        return redirect()->route('reservations.index')->with('success', '予約が完了しました！');
+        // 時間枠の空席状況を更新
+        $slot->checkAndUpdateAvailability();
+
+        return redirect()->route('calendar.public')->with('success', '予約が完了しました！確認メールをお送りしました。');
     }
 
 }

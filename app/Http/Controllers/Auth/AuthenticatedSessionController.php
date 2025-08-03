@@ -29,6 +29,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // セッションに保存された時間枠IDがある場合は予約画面へ
+        if (session('intended_slot_id')) {
+            return redirect()->route('reservations.create', ['slot_id' => session('intended_slot_id')]);
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 
