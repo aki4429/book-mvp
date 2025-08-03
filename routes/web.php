@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
 use App\Http\Controllers\Admin\AdminCalendarController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\ReservationController as PublicReservationController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\CalendarController;
@@ -120,6 +121,11 @@ Route::post('/reservations', [ReservationController::class, 'store'])->name('res
 
 // 管理者の時間枠管理
 Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function () {
+    // 管理者ダッシュボード（通常版）
+    Route::get('dashboard', function () {
+        return view('admin.dashboard.simple');
+    })->name('dashboard');
+    
     // カレンダー管理
     Route::get('calendar', [\App\Http\Controllers\Admin\AdminCalendarController::class, 'index'])->name('calendar.index');
     Route::get('calendar/change-month', [\App\Http\Controllers\Admin\AdminCalendarController::class, 'changeMonth'])->name('calendar.change-month');
@@ -142,8 +148,72 @@ Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function ()
     Route::get('settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
 
-    // 管理者ユーザー管理
+    // 管理者ユーザー管理（既存のLivewire版）
     Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
+    
+    // 管理者ダッシュボード（JS版）
+    Route::prefix('admin-dashboard')->name('admin-dashboard.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'index'])->name('index');
+        Route::get('/stats', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'getStats'])->name('stats');
+        Route::get('/recent-activity', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'getRecentActivity'])->name('recent-activity');
+        Route::get('/chart-data', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'getChartData'])->name('chart-data');
+    });
+    
+    // JS版ユーザー管理
+    Route::prefix('user-manager')->name('user-manager.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\UserManagerController::class, 'index'])->name('index');
+        Route::get('/users', [\App\Http\Controllers\Admin\UserManagerController::class, 'getUsers'])->name('users');
+        Route::get('/users/{user}', [\App\Http\Controllers\Admin\UserManagerController::class, 'getUser'])->name('user');
+        Route::post('/users', [\App\Http\Controllers\Admin\UserManagerController::class, 'store'])->name('store');
+        Route::put('/users/{user}', [\App\Http\Controllers\Admin\UserManagerController::class, 'update'])->name('update');
+        Route::delete('/users/{user}', [\App\Http\Controllers\Admin\UserManagerController::class, 'destroy'])->name('destroy');
+        Route::post('/users/bulk-delete', [\App\Http\Controllers\Admin\UserManagerController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/users/{user}/toggle-admin', [\App\Http\Controllers\Admin\UserManagerController::class, 'toggleAdmin'])->name('toggle-admin');
+        
+        // 予約管理機能
+        Route::get('/users/{user}/reservations', [\App\Http\Controllers\Admin\UserManagerController::class, 'getUserReservations'])->name('user-reservations');
+        Route::get('/reservations/{reservation}', [\App\Http\Controllers\Admin\UserManagerController::class, 'getReservation'])->name('reservation');
+        Route::put('/reservations/{reservation}', [\App\Http\Controllers\Admin\UserManagerController::class, 'updateReservation'])->name('update-reservation');
+        Route::delete('/reservations/{reservation}', [\App\Http\Controllers\Admin\UserManagerController::class, 'deleteReservation'])->name('delete-reservation');
+        Route::post('/users/{user}/reservations', [\App\Http\Controllers\Admin\UserManagerController::class, 'createReservation'])->name('create-reservation');
+        Route::get('/available-timeslots', [\App\Http\Controllers\Admin\UserManagerController::class, 'getAvailableTimeSlots'])->name('available-timeslots');
+    });
+
+    // JS版一括時間枠設定
+    Route::prefix('bulk-timeslots')->name('bulk-timeslots.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\BulkTimeSlotController::class, 'index'])->name('index');
+        Route::get('/presets', [\App\Http\Controllers\Admin\BulkTimeSlotController::class, 'getPresets'])->name('presets');
+        Route::get('/presets/{preset}', [\App\Http\Controllers\Admin\BulkTimeSlotController::class, 'getPreset'])->name('preset');
+        Route::post('/preview', [\App\Http\Controllers\Admin\BulkTimeSlotController::class, 'preview'])->name('preview');
+        Route::post('/store', [\App\Http\Controllers\Admin\BulkTimeSlotController::class, 'store'])->name('store');
+    });
+
+    // JS版プリセット管理
+    Route::prefix('preset-manager')->name('preset-manager.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PresetManagerController::class, 'index'])->name('index');
+        Route::get('/presets', [\App\Http\Controllers\Admin\PresetManagerController::class, 'getPresets'])->name('presets');
+        Route::get('/presets/{preset}', [\App\Http\Controllers\Admin\PresetManagerController::class, 'getPreset'])->name('preset');
+        Route::post('/presets', [\App\Http\Controllers\Admin\PresetManagerController::class, 'store'])->name('store');
+        Route::put('/presets/{preset}', [\App\Http\Controllers\Admin\PresetManagerController::class, 'update'])->name('update');
+        Route::delete('/presets/{preset}', [\App\Http\Controllers\Admin\PresetManagerController::class, 'destroy'])->name('destroy');
+        Route::post('/presets/bulk-delete', [\App\Http\Controllers\Admin\PresetManagerController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/presets/{preset}/toggle-status', [\App\Http\Controllers\Admin\PresetManagerController::class, 'toggleStatus'])->name('toggle-status');
+        Route::post('/presets/{preset}/duplicate', [\App\Http\Controllers\Admin\PresetManagerController::class, 'duplicate'])->name('duplicate');
+        Route::post('/update-order', [\App\Http\Controllers\Admin\PresetManagerController::class, 'updateOrder'])->name('update-order');
+    });
+
+    // JS版システム設定管理
+    Route::prefix('settings-manager')->name('settings-manager.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'index'])->name('index');
+        Route::get('/settings', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'getSettings'])->name('settings');
+        Route::get('/settings/{setting}', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'getSetting'])->name('setting');
+        Route::post('/settings', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'store'])->name('store');
+        Route::put('/settings/{setting}', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'update'])->name('update');
+        Route::delete('/settings/{setting}', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'destroy'])->name('destroy');
+        Route::post('/settings/bulk-delete', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/settings/{setting}/reset-default', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'resetToDefault'])->name('reset-default');
+        Route::get('/system-info', [\App\Http\Controllers\Admin\SettingsManagerController::class, 'getSystemInfo'])->name('system-info');
+    });
 });
 
 

@@ -2,10 +2,11 @@
 <html lang="ja">
 
 <head>
-  <meta char <a href="<?php echo e(route('customers.index')); ?>"
-    class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 
-          <?php echo e(request()->routeIs('customers.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
   <title><?php echo $__env->yieldContent('title', 'Dashboard'); ?></title>
+  <?php echo $__env->yieldPushContent('head'); ?>
   
   <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
 </head>
@@ -17,13 +18,21 @@
       MyAdmin
     </div>
     <nav class="flex-1 px-2 py-4 space-y-2">
-      <a href="<?php echo e(route('dashboard')); ?>"
+      <a href="<?php echo e(route('admin.dashboard')); ?>"
         class="flex items-center px-3 py-2 rounded-lg
-                      hover:bg-gray-200 <?php echo e(request()->routeIs('dashboard') ? 'bg-gray-200 font-semibold' : ''); ?>">
+                      hover:bg-gray-200 <?php echo e(request()->routeIs('admin.dashboard') ? 'bg-gray-200 font-semibold' : ''); ?>">
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
           <use href="#home-icon" />
         </svg>
         <span>ダッシュボード</span>
+      </a>
+      <a href="<?php echo e(route('admin.admin-dashboard.index')); ?>"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          <?php echo e(request()->routeIs('admin.admin-dashboard.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        <span>管理者ダッシュボード (JS版)</span>
       </a>
       <a href="<?php echo e(route('admin.timeslots.index')); ?>"
         class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
@@ -58,7 +67,8 @@
         <span>予約管理</span>
       </a>
       <a href="<?php echo e(route('customers.index')); ?>"
-        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 <?php echo e(request()->routeIs('customers.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200 
+          <?php echo e(request()->routeIs('customers.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
           <use href="#users-icon" />
         </svg>
@@ -83,6 +93,39 @@
           <use href="#users-icon" />
         </svg>
         <span>管理者ユーザー管理</span>
+      </a>
+      <a href="<?php echo e(route('admin.user-manager.index')); ?>"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          <?php echo e(request()->routeIs('admin.user-manager.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <use href="#users-icon" />
+        </svg>
+        <span>ユーザー管理 (JS版)</span>
+      </a>
+      <a href="<?php echo e(route('admin.bulk-timeslots.index')); ?>"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          <?php echo e(request()->routeIs('admin.bulk-timeslots.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span>一括時間枠設定 (JS版)</span>
+      </a>
+      <a href="<?php echo e(route('admin.preset-manager.index')); ?>"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          <?php echo e(request()->routeIs('admin.preset-manager.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <span>プリセット管理 (JS版)</span>
+      </a>
+      <a href="<?php echo e(route('admin.settings-manager.index')); ?>"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          <?php echo e(request()->routeIs('admin.settings-manager.*') ? 'bg-gray-200 font-semibold' : ''); ?>">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        <span>システム設定 (JS版)</span>
       </a>
 
 
