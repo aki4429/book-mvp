@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
+use App\Http\Controllers\Admin\AdminCalendarController;
 use App\Http\Controllers\ReservationController as PublicReservationController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\CalendarController;
@@ -28,6 +29,14 @@ Route::get('/', function () {
 // 顧客用パブリックカレンダー（認証不要）- Livewireなし版
 Route::get('/calendar', [PublicCalendarController::class, 'index'])->name('calendar.public');
 Route::get('/calendar/change-month', [PublicCalendarController::class, 'changeMonth'])->name('calendar.change-month');
+
+// テスト用：認証なしで管理者カレンダーにアクセス
+Route::get('/admin/calendar/test', [AdminCalendarController::class, 'index'])->name('admin.calendar.test');
+Route::get('/admin/calendar/debug', function() {
+    $controller = new AdminCalendarController();
+    $data = $controller->index()->getData();
+    return view('admin.calendar.debug', $data);
+})->name('admin.calendar.debug');
 Route::get('/calendar/day-slots', [PublicCalendarController::class, 'getDaySlots'])->name('calendar.day-slots');
 
 // 旧Livewire版（バックアップ）
@@ -44,7 +53,7 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
     // 顧客認証が必要
     Route::middleware('auth:customer')->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('customer.dashboard');
         Route::post('/logout', [App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('logout');
 
         // 顧客の予約管理（自分の予約のみ）
@@ -76,11 +85,20 @@ Route::middleware('admin')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/reservations', [AdminReservationController::class, 'index'])->name('reservations.index');
     Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-});
-
-// 管理者ダッシュボード
-Route::middleware(['admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // 管理者カレンダー
+    Route::get('/admin/calendar', [AdminCalendarController::class, 'index'])->name('admin.calendar.index');
+    Route::get('/admin/calendar/change-month', [AdminCalendarController::class, 'changeMonth'])->name('admin.calendar.change-month');
+    Route::get('/admin/calendar/day-slots', [AdminCalendarController::class, 'getDaySlots'])->name('admin.calendar.day-slots');
+    
+    // 時間枠管理 (AdminCalendar用)
+    Route::post('/admin/calendar/timeslots', [AdminCalendarController::class, 'createTimeSlot'])->name('admin.calendar.timeslots.create');
+    Route::put('/admin/timeslots/{id}', [AdminCalendarController::class, 'updateTimeSlot'])->name('admin.timeslots.update');
+    Route::delete('/admin/timeslots/{id}', [AdminCalendarController::class, 'deleteTimeSlot'])->name('admin.timeslots.delete');
+    
+    // 予約管理
+    Route::put('/admin/reservations/{id}', [AdminCalendarController::class, 'updateReservation'])->name('admin.reservations.update');
+    Route::delete('/admin/reservations/{id}', [AdminCalendarController::class, 'deleteReservation'])->name('admin.reservations.delete');
 });
 
 // 管理者の予約管理
@@ -95,6 +113,12 @@ Route::post('/reservations', [ReservationController::class, 'store'])->name('res
 
 // 管理者の時間枠管理
 Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function () {
+    // カレンダー管理
+    Route::get('calendar', [\App\Http\Controllers\Admin\AdminCalendarController::class, 'index'])->name('calendar.index');
+    Route::get('calendar/change-month', [\App\Http\Controllers\Admin\AdminCalendarController::class, 'changeMonth'])->name('calendar.change-month');
+    Route::get('calendar/day-slots', [\App\Http\Controllers\Admin\AdminCalendarController::class, 'getDaySlots'])->name('calendar.day-slots');
+    
+    // 時間枠管理
     Route::resource('timeslots', \App\Http\Controllers\Admin\TimeSlotController::class)->except(['show']);
 
     // 一括登録画面表示

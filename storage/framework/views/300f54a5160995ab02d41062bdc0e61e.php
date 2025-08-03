@@ -4,9 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
   <title>予約カレンダー</title>
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
+  <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
   <style>
     .tooltip-arrow {
       position: absolute;
@@ -64,27 +64,28 @@
       </div>
       
       <div class="flex items-center space-x-4">
-        @auth
+        <?php if(auth()->guard()->check()): ?>
           <!-- ログイン中のユーザー情報 -->
           <div class="flex items-center space-x-3">
             <div class="flex items-center space-x-2">
               <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span class="text-white text-sm font-medium">
-                  {{ substr(auth()->user()->name, 0, 1) }}
+                  <?php echo e(substr(auth()->user()->name, 0, 1)); ?>
+
                 </span>
               </div>
               <div class="text-sm">
-                <p class="font-medium text-gray-700">{{ auth()->user()->name }}</p>
-                <p class="text-gray-500">{{ auth()->user()->email }}</p>
-                @if(auth()->user()->isAdmin())
+                <p class="font-medium text-gray-700"><?php echo e(auth()->user()->name); ?></p>
+                <p class="text-gray-500"><?php echo e(auth()->user()->email); ?></p>
+                <?php if(auth()->user()->isAdmin()): ?>
                   <p class="text-blue-600 text-xs font-medium">管理者</p>
-                @endif
+                <?php endif; ?>
               </div>
             </div>
             
             <!-- 管理者の場合は管理カレンダーリンクを表示 -->
-            @if(auth()->user()->isAdmin())
-              <a href="{{ route('admin.calendar.index') }}" 
+            <?php if(auth()->user()->isAdmin()): ?>
+              <a href="<?php echo e(route('admin.calendar.index')); ?>" 
                  class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors flex items-center space-x-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -92,11 +93,11 @@
                 </svg>
                 <span>管理カレンダー</span>
               </a>
-            @endif
+            <?php endif; ?>
             
             <!-- ログアウトボタン -->
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-              @csrf
+            <form method="POST" action="<?php echo e(route('logout')); ?>" class="inline">
+              <?php echo csrf_field(); ?>
               <button type="submit" 
                       class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
                       onclick="return confirm('ログアウトしますか？')">
@@ -107,24 +108,24 @@
               </button>
             </form>
           </div>
-        @else
+        <?php else: ?>
           <!-- 未ログインの場合 -->
           <div class="flex items-center space-x-3">
-            <a href="{{ route('login') }}" 
+            <a href="<?php echo e(route('login')); ?>" 
                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               ログイン
             </a>
-            <a href="{{ route('register') }}" 
+            <a href="<?php echo e(route('register')); ?>" 
                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               新規登録
             </a>
           </div>
-        @endauth
+        <?php endif; ?>
       </div>
     </div>
 
     <!-- 成功メッセージ -->
-    @if (session('success'))
+    <?php if(session('success')): ?>
       <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 mx-auto max-w-md">
         <div class="flex items-center">
           <div class="text-green-400 mr-3">
@@ -132,13 +133,13 @@
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
             </svg>
           </div>
-          <p class="text-green-700 font-medium">{{ session('success') }}</p>
+          <p class="text-green-700 font-medium"><?php echo e(session('success')); ?></p>
         </div>
       </div>
-    @endif
+    <?php endif; ?>
 
     <!-- エラーメッセージ -->
-    @if (session('error'))
+    <?php if(session('error')): ?>
       <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 mx-auto max-w-md">
         <div class="flex items-center">
           <div class="text-red-400 mr-3">
@@ -146,10 +147,10 @@
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
             </svg>
           </div>
-          <p class="text-red-700 font-medium">{{ session('error') }}</p>
+          <p class="text-red-700 font-medium"><?php echo e(session('error')); ?></p>
         </div>
       </div>
-    @endif
+    <?php endif; ?>
 
     <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -164,7 +165,8 @@
           </button>
           
           <h2 class="text-xl font-semibold text-gray-900" id="calendar-title">
-            {{ $calendarData['currentMonth']->format('Y年m月') }}
+            <?php echo e($calendarData['currentMonth']->format('Y年m月')); ?>
+
           </h2>
           
           <button onclick="changeMonth(1)" class="btn-next p-2 rounded-lg hover:bg-gray-100">
@@ -176,7 +178,7 @@
 
         <!-- カレンダーグリッド -->
         <div id="calendar-container">
-          @include('calendar.partials.calendar-grid', $calendarData)
+          <?php echo $__env->make('calendar.partials.calendar-grid', $calendarData, \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
         </div>
       </div>
 
@@ -204,8 +206,8 @@
   </div>
 
   <script>
-    let currentYear = {{ $currentYear }};
-    let currentMonth = {{ $currentMonth }};
+    let currentYear = <?php echo e($currentYear); ?>;
+    let currentMonth = <?php echo e($currentMonth); ?>;
     let tooltipTimeout;
     let isTooltipPinned = false; // ツールチップが固定されているかどうか
 
@@ -249,7 +251,7 @@
       }
 
       // Ajaxリクエストでカレンダーを更新
-      fetch(`{{ route('calendar.change-month') }}?year=${currentYear}&month=${currentMonth}`, {
+      fetch(`<?php echo e(route('calendar.change-month')); ?>?year=${currentYear}&month=${currentMonth}`, {
         method: 'GET',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -274,7 +276,7 @@
 
     function selectDate(date) {
       // 選択された日のタイムスロットを取得
-      fetch(`{{ route('calendar.day-slots') }}?date=${date}`, {
+      fetch(`<?php echo e(route('calendar.day-slots')); ?>?date=${date}`, {
         method: 'GET',
         headers: {
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -447,7 +449,7 @@
     // 予約画面にリダイレクトするグローバル関数
     window.redirectToReservation = function(slotId) {
       console.log('Redirecting to reservation with slot ID:', slotId);
-      const url = `{{ route('reservations.create') }}?slot_id=${slotId}`;
+      const url = `<?php echo e(route('reservations.create')); ?>?slot_id=${slotId}`;
       console.log('URL:', url);
       window.location.href = url;
     };
@@ -463,7 +465,7 @@
       setTimeout(() => {
         tooltip.style.display = 'none';
         // 予約画面にリダイレクト
-        window.location.href = `{{ route('reservations.create') }}?slot_id=${slotId}`;
+        window.location.href = `<?php echo e(route('reservations.create')); ?>?slot_id=${slotId}`;
       }, 200);
     };
 
@@ -483,3 +485,4 @@
 </body>
 
 </html>
+<?php /**PATH /var/www/html/app_3/resources/views/calendar/public-simple.blade.php ENDPATH**/ ?>
