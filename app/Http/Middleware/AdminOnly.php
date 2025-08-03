@@ -16,9 +16,15 @@ class AdminOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // 管理者としてログインしているかチェック
+        // ログインしているかチェック
         if (!Auth::guard('web')->check()) {
             return redirect()->route('login');
+        }
+
+        // 管理者権限があるかチェック
+        $user = Auth::user();
+        if (!$user->is_admin) {
+            abort(403, 'このページにアクセスする権限がありません。');
         }
 
         return $next($request);

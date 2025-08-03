@@ -103,6 +103,9 @@ Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function ()
     // システム設定
     Route::get('settings', [\App\Http\Controllers\Admin\SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [\App\Http\Controllers\Admin\SettingController::class, 'update'])->name('settings.update');
+
+    // 管理者ユーザー管理
+    Route::resource('users', \App\Http\Controllers\Admin\AdminUserController::class);
 });
 
 

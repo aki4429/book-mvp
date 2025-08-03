@@ -78,6 +78,14 @@
         <svg class="h-5 w-5 mr-2"><!-- settings icon --></svg>
         <span>システム設定</span>
       </a>
+      <a href="{{ route('admin.users.index') }}"
+        class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-200
+          {{ request()->routeIs('admin.users.*') ? 'bg-gray-200 font-semibold' : '' }}">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor">
+          <use href="#users-icon" />
+        </svg>
+        <span>管理者ユーザー管理</span>
+      </a>
 
 
     </nav>
