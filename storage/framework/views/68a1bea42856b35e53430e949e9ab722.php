@@ -35,8 +35,9 @@
 
     <!-- Page Content -->
     <main>
-      <?php echo e($slot); ?>
+      <?php echo e($slot ?? ''); ?>
 
+      <?php echo $__env->yieldContent('content'); ?>
     </main>
   </div>
   <!-- body終了直前 -->

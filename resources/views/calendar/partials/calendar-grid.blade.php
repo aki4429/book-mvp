@@ -41,7 +41,7 @@
                     {{ $isToday ? 'bg-blue-50' : '' }}
                     {{ $isReservable && $totalSlots > 0 ? 'cursor-pointer hover:bg-gray-50' : '' }}"
              @if($isReservable && $totalSlots > 0)
-               onclick="showTimeSlotTooltip(event, '{{ $dateString }}', true)"
+               onclick="selectDate('{{ $dateString }}')"
                onmouseenter="if (!isTooltipPinned) showTimeSlotTooltip(event, '{{ $dateString }}')"
                onmouseleave="if (!isTooltipPinned) hideTimeSlotTooltip()"
                data-date="{{ $dateString }}"

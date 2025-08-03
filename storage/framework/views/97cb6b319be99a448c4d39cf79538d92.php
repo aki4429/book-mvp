@@ -44,7 +44,7 @@
 
                     <?php echo e($isReservable && $totalSlots > 0 ? 'cursor-pointer hover:bg-gray-50' : ''); ?>"
              <?php if($isReservable && $totalSlots > 0): ?>
-               onclick="showTimeSlotTooltip(event, '<?php echo e($dateString); ?>', true)"
+               onclick="selectDate('<?php echo e($dateString); ?>')"
                onmouseenter="if (!isTooltipPinned) showTimeSlotTooltip(event, '<?php echo e($dateString); ?>')"
                onmouseleave="if (!isTooltipPinned) hideTimeSlotTooltip()"
                data-date="<?php echo e($dateString); ?>"

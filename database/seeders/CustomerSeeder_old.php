@@ -30,13 +30,13 @@ class CustomerSeeder extends Seeder
             'password' => Hash::make('password'),
             'is_admin' => false,
         ]);
-
-        User::create([
+    }
+}
+        
+        Customer::create([
             'name' => '山田 次郎',
             'email' => 'yamada@example.com',
             'phone' => '070-1111-2222',
-            'password' => Hash::make('password'),
-            'is_admin' => false,
         ]);
     }
 }

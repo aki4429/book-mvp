@@ -324,6 +324,102 @@ class AdminCalendarController extends Controller
         ]);
     }
     
+    public function createReservation(Request $request)
+    {
+        try {
+            \Log::info('CreateReservation request received', [
+                'request_data' => $request->all()
+            ]);
+            
+            // 既存顧客を使用する場合
+            if ($request->boolean('use_existing_customer', false)) {
+                $request->validate([
+                    'time_slot_id' => 'required|exists:time_slots,id',
+                    'customer_id' => 'required|exists:customers,id',
+                    'status' => 'required|in:pending,confirmed,cancelled'
+                ]);
+                
+                $customer = \App\Models\Customer::findOrFail($request->customer_id);
+            } else {
+                // 新規顧客の場合
+                $request->validate([
+                    'time_slot_id' => 'required|exists:time_slots,id',
+                    'customer_name' => 'required|string|max:255',
+                    'customer_email' => 'required|email|max:255',
+                    'customer_phone' => 'nullable|string|max:20',
+                    'customer_password' => 'required|string|min:6|confirmed',
+                    'status' => 'required|in:pending,confirmed,cancelled'
+                ]);
+                
+                // 顧客を検索または作成
+                $customer = \App\Models\Customer::where('email', $request->customer_email)->first();
+                
+                if (!$customer) {
+                    $customer = \App\Models\Customer::create([
+                        'name' => $request->customer_name,
+                        'email' => $request->customer_email,
+                        'phone' => $request->customer_phone,
+                        'password' => bcrypt($request->customer_password)
+                    ]);
+                } else {
+                    // 既存顧客の情報を更新（パスワードは既存顧客の場合は更新しない）
+                    $customer->update([
+                        'name' => $request->customer_name,
+                        'phone' => $request->customer_phone
+                    ]);
+                }
+            }
+            
+            // 時間枠の容量をチェック
+            $timeSlot = TimeSlot::with('reservations')->findOrFail($request->time_slot_id);
+            $currentReservations = $timeSlot->reservations()->where('status', '!=', 'cancelled')->count();
+            
+            if ($currentReservations >= $timeSlot->capacity) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'この時間枠は満席です。'
+                ], 400);
+            }
+            
+            // 予約を作成
+            $reservation = Reservation::create([
+                'time_slot_id' => $request->time_slot_id,
+                'customer_id' => $customer->id,
+                'status' => $request->status,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
+            // 関連データと一緒に予約を再取得
+            $reservation = Reservation::with(['customer', 'timeSlot'])->find($reservation->id);
+            
+            \Log::info('Reservation created successfully', ['id' => $reservation->id]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => '予約を作成しました。',
+                'reservation' => $reservation
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Reservation creation validation error', [
+                'errors' => $e->errors()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'バリデーションエラー: ' . collect($e->errors())->flatten()->implode(', ')
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Reservation creation error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'エラーが発生しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
     private function generateCalendarData($startOfMonth, $endOfMonth)
     {
         $calendar = [];
@@ -340,15 +436,6 @@ class AdminCalendarController extends Controller
             ->groupBy(function($slot) {
                 return $slot->date->format('Y-m-d');
             });
-        
-        // デバッグ: 8月3日のデータを確認
-        \Log::info('Calendar data generation', [
-            'start_date' => $startOfCalendar->format('Y-m-d'),
-            'end_date' => $endOfCalendar->format('Y-m-d'),
-            'total_slots_found' => $timeSlots->flatten()->count(),
-            'aug_3_slots' => $timeSlots->get('2025-08-03', collect())->count(),
-            'aug_3_data' => $timeSlots->get('2025-08-03', collect())->toArray()
-        ]);
         
         $current = $startOfCalendar->copy();
         while ($current->lte($endOfCalendar)) {
@@ -377,5 +464,40 @@ class AdminCalendarController extends Controller
         }
         
         return array_chunk($calendar, 7);
+    }
+    
+    public function searchCustomers(Request $request)
+    {
+        try {
+            $query = $request->get('query', '');
+            
+            if (strlen($query) < 2) {
+                return response()->json([
+                    'success' => true,
+                    'customers' => []
+                ]);
+            }
+            
+            $customers = \App\Models\Customer::where(function($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                  ->orWhere('email', 'LIKE', "%{$query}%");
+            })
+            ->limit(10)
+            ->get(['id', 'name', 'email', 'phone']);
+            
+            return response()->json([
+                'success' => true,
+                'customers' => $customers
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Customer search error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'エラーが発生しました: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

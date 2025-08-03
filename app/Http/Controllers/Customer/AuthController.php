@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,16 +26,17 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:customers',
+            'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'nullable|string|max:255',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $customer = Customer::create([
+        $customer = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
+            'is_admin' => false,
         ]);
 
         Auth::guard('customer')->login($customer);
@@ -54,7 +55,14 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('customer')->attempt($request->only('email', 'password'), $request->boolean('remember'))) {
+        // 顧客のみログイン可能（is_admin = false）
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password,
+            'is_admin' => false,
+        ];
+
+        if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended(route('customer.dashboard'))

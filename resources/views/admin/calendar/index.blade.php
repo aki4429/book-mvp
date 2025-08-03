@@ -5,24 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>🔥🔥🔥 [18:52 TEST] 管理者カレンダー STANDALONE v5.0 - {{ date("H:i:s") }} - 時間枠・予約管理</title>
-  {{-- @vite(['resources/css/app.css']) --}}
-  <!-- VITE COMPLETELY DISABLED FOR DEBUGGING -->
-  <script src="https://cdn.tailwindcss.com"></script>>🔥🔥🔥 [18:52 TEST] 管理者カレンダー STANDALONE v5.0 - {{ date('H:i:s') }} - 時間枠・予約管理</title>
-  {{-- @vite(['resources/css/app.css']) --}}
-  <!-- VITE COMPLETELY DISABLED FOR DEBUGGING -->
-  <script src="https://cdn.tailwindcss.com"></script>tml>
-  <html lang="ja">
-
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>🔥🔥🔥 [18:52 TEST] 管理者カレンダー STANDALONE v5.0 - {{ date('H:i:s') }} - 時間枠・予約管理</title>
-    {{-- @vite(['resources/css/app.css']) --}}
-    <!-- VITE COMPLETELY DISABLED FOR DEBUGGING -->
-    <link href="https://cdn.tailwindcss.com/3.3.0/tailwind.min.css" rel="stylesheet">
-    <style>
+  <title>管理者カレンダー - 時間枠・予約管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          gridTemplateColumns: {
+            '7': 'repeat(7, minmax(0, 1fr))'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
       .tooltip-arrow {
         position: absolute;
         bottom: 100%;
@@ -75,12 +71,20 @@
       }
 
       .modal {
-        display: none;
+        display: none !important;
         transition: all 0.3s ease-in-out;
       }
 
       .modal.show {
-        display: flex;
+        display: flex !important;
+      }
+      
+      #add-reservation-modal {
+        display: none !important;
+      }
+      
+      #add-reservation-modal.show {
+        display: block !important;
       }
 
       .modal-content {
@@ -97,7 +101,6 @@
   </head>
 
   <body class="bg-gray-100">
-    <!-- 🔥🔥🔥 TEST MARKER 18:52 - IF YOU SEE THIS, NEW FILE IS LOADED 🔥🔥🔥 -->
     <div class="container mx-auto p-4">
       <!-- ヘッダー -->
       <div class="flex justify-between items-center mb-6 bg-white rounded-lg shadow-sm p-4">
@@ -332,6 +335,110 @@
         </div>
       </div>
 
+      <!-- 予約追加モーダル -->
+      <div id="add-reservation-modal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full modal" style="z-index: 60;">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white modal-content">
+          <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-medium text-gray-900">予約追加</h3>
+              <button onclick="closeAddReservationModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                  </path>
+                </svg>
+              </button>
+            </div>
+
+            <form id="add-reservation-form" action="javascript:void(0);" onsubmit="handleAddReservationSubmit(event)">
+              <input type="hidden" id="add-reservation-time-slot-id" name="time_slot_id">
+
+              <!-- 顧客選択方法 -->
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">顧客選択</label>
+                <div class="flex space-x-4 mb-3">
+                  <label class="flex items-center">
+                    <input type="radio" name="customer_type" value="existing" id="existing-customer" class="mr-2" onchange="toggleCustomerInput()">
+                    <span class="text-sm">既存顧客</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="customer_type" value="new" id="new-customer" class="mr-2" checked onchange="toggleCustomerInput()">
+                    <span class="text-sm">新規顧客</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 既存顧客選択 -->
+              <div id="existing-customer-section" class="mb-4" style="display: none;">
+                <label class="block text-sm font-medium text-gray-700 mb-2">顧客検索</label>
+                <input type="text" id="customer-search" placeholder="名前またはメールアドレスで検索..."
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  oninput="searchCustomers(this.value)">
+                <div id="customer-search-results" class="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md bg-white" style="display: none;"></div>
+                <input type="hidden" id="selected-customer-id" name="selected_customer_id">
+              </div>
+
+              <!-- 新規顧客情報 -->
+              <div id="new-customer-section">
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">顧客名 <span class="text-red-500">*</span></label>
+                  <input type="text" id="add-customer-name" name="customer_name" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">メールアドレス <span class="text-red-500">*</span></label>
+                  <input type="email" id="add-customer-email" name="customer_email" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">電話番号</label>
+                  <input type="tel" id="add-customer-phone" name="customer_phone"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">パスワード <span class="text-red-500">*</span></label>
+                  <input type="password" id="add-customer-password" name="customer_password" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="顧客ログイン用パスワード">
+                  <p class="text-xs text-gray-500 mt-1">顧客がシステムにログインする際に使用するパスワードです</p>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">パスワード確認 <span class="text-red-500">*</span></label>
+                  <input type="password" id="add-customer-password-confirmation" name="customer_password_confirmation" required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="パスワードを再入力してください">
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">ステータス</label>
+                <select id="add-reservation-status" name="status"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                  <option value="confirmed">確定</option>
+                  <option value="pending">待機中</option>
+                  <option value="cancelled">キャンセル</option>
+                </select>
+              </div>
+
+              <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeAddReservationModal()"
+                  class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                  キャンセル
+                </button>
+                <button type="submit"
+                  class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                  追加
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- フッター -->
       <footer class="bg-white border-t mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -354,12 +461,13 @@
       daySlots: '{{ route("admin.calendar.day-slots") }}',
       timeslotBase: '{{ url("/admin/timeslots") }}',
       timeslotCreate: '{{ route("admin.calendar.timeslots.create") }}',
-      reservationBase: '{{ url("/admin/reservations") }}'
-    };      console.log('�🔥🔥 [18:52 TEST] Configuration loaded for standalone script');
+      reservationBase: '{{ url("/admin/reservations") }}',
+      reservationCreate: '{{ route("admin.calendar.reservations.create") }}',
+      searchCustomers: '{{ route("admin.calendar.search-customers") }}'
+    };
     </script>
 
-    <!-- STANDALONE JAVASCRIPT FILE - NO CACHE -->
-    <script src="/admin-calendar-v5.js?v={{ time() }}&nocache={{ rand(1000, 9999) }}"></script>
+    <script src="/admin-calendar-v5.js?v={{ time() }}"></script>
   </body>
 
   </html>

@@ -1,7 +1,32 @@
-// === ADMIN CALENDAR v5.4 STANDALONE - ROUTE FIX ===
-console.log('🚀🚀🚀 ADMIN CALENDAR STANDALONE LOADED - VERSION 5.4 🚀🚀🚀');
-console.log('🔥 CACHE COMPLETELY BYPASSED - NEW STANDALONE FILE! 🔥');
-console.log('⚡ TIMESTAMP:', new Date().toISOString());
+// === ADMIN CALENDAR - CUSTOMER SEARCH ===
+
+// Alert function for user feedback
+function showAlert(type, message) {
+  // Create alert element
+  const alert = document.createElement('div');
+  alert.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-md shadow-lg transition-all duration-300 ${
+    type === 'error' 
+      ? 'bg-red-100 border border-red-400 text-red-700' 
+      : type === 'success'
+      ? 'bg-green-100 border border-green-400 text-green-700'
+      : 'bg-blue-100 border border-blue-400 text-blue-700'
+  }`;
+  alert.innerHTML = `
+    <div class="flex items-center">
+      <span>${message}</span>
+      <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-lg font-bold">&times;</button>
+    </div>
+  `;
+  
+  document.body.appendChild(alert);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (alert.parentNode) {
+      alert.remove();
+    }
+  }, 5000);
+}
 
 let currentYear;
 let currentMonth;
@@ -11,8 +36,6 @@ let isTooltipPinned = false;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎯 DOM LOADED - INITIALIZING ADMIN CALENDAR');
-  
   // Get current year and month from PHP variables (will be set by inline script)
   if (typeof window.calendarData !== 'undefined') {
     currentYear = window.calendarData.currentYear;
@@ -26,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.key === 'Escape') {
       closeTimeslotModal();
       closeReservationModal();
+      closeAddReservationModal();
       if (isTooltipPinned) {
         hideTooltip(true);
       }
@@ -36,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(e) {
     const timeslotModal = document.getElementById('timeslot-modal');
     const reservationModal = document.getElementById('reservation-modal');
+    const addReservationModal = document.getElementById('add-reservation-modal');
     const tooltip = document.getElementById('tooltip');
     
     if (e.target === timeslotModal) {
@@ -43,6 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (e.target === reservationModal) {
       closeReservationModal();
+    }
+    if (e.target === addReservationModal) {
+      closeAddReservationModal();
     }
     
     const isTooltipClick = tooltip.contains(e.target);
@@ -146,22 +174,10 @@ function selectDate(date) {
 }
 
 function handleTimeslotFormSubmit() {
-  console.log('🚀 TIMESLOT FORM SUBMIT - BUTTON CLICK - VERSION 5.2');
-  
   const form = document.getElementById('timeslot-form');
   const formData = new FormData(form);
   const id = formData.get('timeslot_id');
   const isEdit = id && id !== '';
-  
-  console.log('📋 BUTTON Form data check:', {
-    timeslot_id: formData.get('timeslot_id'),
-    date: formData.get('date'),
-    start_time: formData.get('start_time'),
-    end_time: formData.get('end_time'),
-    capacity: formData.get('capacity'),
-    service_id: formData.get('service_id'),
-    available: document.getElementById('available').checked
-  });
   
   const url = window.routes ? 
     (isEdit ? `${window.routes.timeslotBase}/${id}` : window.routes.timeslotCreate) :
@@ -178,8 +194,6 @@ function handleTimeslotFormSubmit() {
     available: document.getElementById('available').checked
   };
   
-  console.log('🎯 BUTTON Submitting timeslot data:', { url, method, data });
-  
   fetch(url, {
     method: method,
     headers: {
@@ -191,31 +205,16 @@ function handleTimeslotFormSubmit() {
     body: JSON.stringify(data)
   })
   .then(response => {
-    console.log('📡 BUTTON Response received:', response);
-    console.log('🔍 BUTTON Response details:', {
-      status: response.status,
-      statusText: response.statusText,
-      redirected: response.redirected,
-      url: response.url,
-      headers: Array.from(response.headers.entries())
-    });
-    
     return response.text().then(text => {
-      console.log('📄 BUTTON Response text:', text.substring(0, 500) + '...');
-      
       try {
         const jsonData = JSON.parse(text);
-        console.log('✅ BUTTON Valid JSON response:', jsonData);
         return jsonData;
       } catch (parseError) {
-        console.error('❌ BUTTON JSON parse error:', parseError);
-        console.log('🔥 BUTTON Full response text:', text);
         throw new Error(`Invalid JSON response: ${parseError.message}`);
       }
     });
   })
   .then(data => {
-    console.log('✅ BUTTON Success response:', data);
     if (data.success) {
       showMessage(data.message, 'success');
       closeTimeslotModal();
@@ -226,7 +225,6 @@ function handleTimeslotFormSubmit() {
     }
   })
   .catch(error => {
-    console.error('💥 BUTTON Error:', error);
     showMessage(`エラーが発生しました: ${error.message}`, 'error');
   });
 }
@@ -234,20 +232,10 @@ function handleTimeslotFormSubmit() {
 function handleTimeslotSubmit(e) {
   e.preventDefault();
   e.stopPropagation();
-  console.log('🚀 TIMESLOT SUBMIT FROM STANDALONE - VERSION 5.2 - FORM PREVENT ENHANCED');
   
   const formData = new FormData(e.target);
   const id = formData.get('timeslot_id');
   const isEdit = id && id !== '';
-  
-  console.log('📋 STANDALONE Form data check:', {
-    timeslot_id: formData.get('timeslot_id'),
-    date: formData.get('date'),
-    start_time: formData.get('start_time'),
-    end_time: formData.get('end_time'),
-    capacity: formData.get('capacity'),
-    service_id: formData.get('service_id')
-  });
   
   const baseUrl = window.routes ? window.routes.timeslotBase : '/admin/timeslots';
   const createUrl = window.routes ? window.routes.timeslotCreate : '/admin/timeslots/create';
@@ -264,8 +252,6 @@ function handleTimeslotSubmit(e) {
     available: document.getElementById('available').checked
   };
   
-  console.log('🎯 STANDALONE Submitting timeslot data:', { url, method, data });
-  
   fetch(url, {
     method: method,
     headers: {
@@ -277,33 +263,16 @@ function handleTimeslotSubmit(e) {
     body: JSON.stringify(data)
   })
   .then(response => {
-    console.log('📡 STANDALONE Response received:', response);
-    console.log('🔍 STANDALONE Response details:', {
-      status: response.status,
-      statusText: response.statusText,
-      redirected: response.redirected,
-      url: response.url,
-      headers: Array.from(response.headers.entries())
-    });
-    
-    // レスポンス内容をテキストとして読み取って確認
     return response.text().then(text => {
-      console.log('📄 STANDALONE Response text:', text.substring(0, 500) + '...');
-      
-      // JSONかどうか確認してパース
       try {
         const jsonData = JSON.parse(text);
-        console.log('✅ STANDALONE Valid JSON response:', jsonData);
         return jsonData;
       } catch (parseError) {
-        console.error('❌ STANDALONE JSON parse error:', parseError);
-        console.log('🔥 STANDALONE Full response text:', text);
         throw new Error(`Invalid JSON response: ${parseError.message}`);
       }
     });
   })
   .then(data => {
-    console.log('✅ STANDALONE Success response:', data);
     if (data.success) {
       showMessage(data.message, 'success');
       closeTimeslotModal();
@@ -314,7 +283,6 @@ function handleTimeslotSubmit(e) {
     }
   })
   .catch(error => {
-    console.error('💥 STANDALONE Error:', error);
     showMessage(`エラーが発生しました: ${error.message}`, 'error');
   });
 }
@@ -322,18 +290,9 @@ function handleTimeslotSubmit(e) {
 function handleReservationSubmit(e) {
   e.preventDefault();
   e.stopPropagation();
-  console.log('🚀 RESERVATION SUBMIT FROM STANDALONE - VERSION 5.2 - FORM PREVENT ENHANCED');
   
   const formData = new FormData(e.target);
   const id = formData.get('reservation_id');
-  
-  console.log('📋 STANDALONE Reservation form data check:', {
-    reservation_id: formData.get('reservation_id'),
-    customer_name: formData.get('customer_name'),
-    customer_email: formData.get('customer_email'),
-    customer_phone: formData.get('customer_phone'),
-    status: formData.get('status')
-  });
   
   const data = {
     customer_name: document.getElementById('customer-name').value,
@@ -343,8 +302,6 @@ function handleReservationSubmit(e) {
   };
   
   const baseUrl = window.routes ? window.routes.reservationBase : '/admin/reservations';
-  
-  console.log('🎯 STANDALONE Submitting reservation data:', { id, data });
   
   fetch(`${baseUrl}/${id}`, {
     method: 'PUT',
@@ -357,17 +314,14 @@ function handleReservationSubmit(e) {
     body: JSON.stringify(data)
   })
   .then(response => {
-    console.log('📡 STANDALONE Reservation response received:', response);
     if (!response.ok) {
       return response.json().then(errorData => {
-        console.error('❌ STANDALONE Reservation server error response:', errorData);
         throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
       });
     }
     return response.json();
   })
   .then(data => {
-    console.log('✅ STANDALONE Reservation success response:', data);
     if (data.success) {
       showMessage(data.message, 'success');
       closeReservationModal();
@@ -378,7 +332,6 @@ function handleReservationSubmit(e) {
     }
   })
   .catch(error => {
-    console.error('💥 STANDALONE Reservation error:', error);
     showMessage(`エラーが発生しました: ${error.message}`, 'error');
   });
 }
@@ -640,4 +593,347 @@ function showMessage(message, type) {
   setTimeout(() => {
     container.innerHTML = '';
   }, 3000);
+}
+
+// === RESERVATION MANAGEMENT ===
+
+// 予約追加
+function addReservation(timeSlotId) {
+  const modal = document.getElementById('add-reservation-modal');
+  
+  if (!modal) {
+    return;
+  }
+  
+  // フォーム要素の設定
+  const timeSlotIdField = document.getElementById('add-reservation-time-slot-id');
+  const customerNameField = document.getElementById('add-customer-name');
+  const customerEmailField = document.getElementById('add-customer-email');
+  const customerPhoneField = document.getElementById('add-customer-phone');
+  const statusField = document.getElementById('add-reservation-status');
+  
+  // Set the time slot ID in the hidden field
+  if (timeSlotIdField) {
+    timeSlotIdField.value = timeSlotId;
+  }
+  
+  // Clear form fields
+  if (customerNameField) customerNameField.value = '';
+  if (customerEmailField) customerEmailField.value = '';
+  if (customerPhoneField) customerPhoneField.value = '';
+  if (statusField) statusField.value = 'confirmed';
+  
+  // Reset customer selection
+  document.getElementById('new-customer').checked = true;
+  document.getElementById('existing-customer').checked = false;
+  toggleCustomerInput();
+  
+  const customerSearchResults = document.getElementById('customer-search-results');
+  if (customerSearchResults) {
+    customerSearchResults.style.display = 'none';
+    customerSearchResults.innerHTML = '';
+  }
+  
+  const customerSearch = document.getElementById('customer-search');
+  if (customerSearch) customerSearch.value = '';
+  
+  const selectedCustomerId = document.getElementById('selected-customer-id');
+  if (selectedCustomerId) selectedCustomerId.value = '';
+  
+  // Show modal
+  modal.style.display = 'block';
+  modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.classList.add('show');
+}
+
+// 予約追加モーダルを閉じる
+function closeAddReservationModal() {
+  const modal = document.getElementById('add-reservation-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('show');
+    
+    // フォームをリセット
+    const form = modal.querySelector('form');
+    if (form) {
+      form.reset();
+    }
+    
+    // パスワードフィールドを個別でクリア
+    const passwordField = document.getElementById('add-customer-password');
+    const passwordConfirmField = document.getElementById('add-customer-password-confirmation');
+    if (passwordField) passwordField.value = '';
+    if (passwordConfirmField) passwordConfirmField.value = '';
+    
+    // 顧客検索結果をクリア
+    const searchResults = document.getElementById('customer-search-results');
+    if (searchResults) {
+      searchResults.style.display = 'none';
+      searchResults.innerHTML = '';
+    }
+    
+    // 選択された顧客IDをクリア
+    const selectedCustomerId = document.getElementById('selected-customer-id');
+    if (selectedCustomerId) selectedCustomerId.value = '';
+  }
+}
+
+// 予約追加フォーム送信
+async function handleAddReservationSubmit(event) {
+  event.preventDefault();
+  
+  const formData = new FormData(event.target);
+  const existingCustomer = document.getElementById('existing-customer').checked;
+  const submitButton = event.target.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton ? submitButton.textContent : '';
+  
+  // ボタンを無効化してローディング状態にする
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = '処理中...';
+  }
+  
+  let data;
+  
+  if (existingCustomer) {
+    const selectedCustomerId = document.getElementById('selected-customer-id').value;
+    if (!selectedCustomerId) {
+      showAlert('error', '顧客を選択してください');
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      return;
+    }
+    
+    data = {
+      time_slot_id: formData.get('time_slot_id'),
+      customer_id: selectedCustomerId,
+      status: formData.get('status') || 'confirmed',
+      use_existing_customer: true
+    };
+  } else {
+    // 新規顧客の場合、パスワード確認
+    const password = formData.get('customer_password');
+    const passwordConfirmation = formData.get('customer_password_confirmation');
+    
+    if (!password || password.length < 6) {
+      showAlert('error', 'パスワードは6文字以上で入力してください');
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      return;
+    }
+    
+    if (password !== passwordConfirmation) {
+      showAlert('error', 'パスワードが一致しません');
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      return;
+    }
+    
+    data = {
+      time_slot_id: formData.get('time_slot_id'),
+      customer_name: formData.get('customer_name'),
+      customer_email: formData.get('customer_email'),
+      customer_phone: formData.get('customer_phone'),
+      customer_password: password,
+      customer_password_confirmation: passwordConfirmation,
+      status: formData.get('status') || 'confirmed',
+      use_existing_customer: false
+    };
+  }
+  
+  try {
+    // タイムアウト設定（10秒）
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(window.routes.reservationCreate, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId); // リクエスト成功時はタイムアウトをクリア
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      showAlert('error', `サーバーエラー: ${response.status} ${response.statusText}`);
+      
+      // ボタンを元の状態に戻す
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      return;
+    }
+    
+    const responseText = await response.text();
+    
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch (parseError) {
+      showAlert('error', 'サーバーからの応答形式が不正です');
+      
+      // ボタンを元の状態に戻す
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      return;
+    }
+    
+    if (result.success) {
+      showAlert('success', result.message);
+      
+      // ボタンを元の状態に戻す
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+      
+      closeAddReservationModal();
+      
+      // 少し待ってから画面を更新（UI の応答性向上）
+      setTimeout(() => {
+        // Refresh day slots if we have a selected date
+        if (selectedDate) {
+          selectDate(selectedDate); // 既存の selectDate 関数を使用してページを更新
+        }
+        
+        // カレンダー全体も更新
+        changeMonth(0);
+      }, 500);
+    } else {
+      showAlert('error', result.message || 'エラーが発生しました');
+      
+      // ボタンを元の状態に戻す
+      if (submitButton) {
+        submitButton.disabled = false; 
+        submitButton.textContent = originalButtonText;
+      }
+    }
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      showAlert('error', 'ネットワーク接続エラー: サーバーに接続できません');
+    } else if (error.name === 'AbortError') {
+      showAlert('error', 'リクエストがタイムアウトしました');
+    } else {
+      showAlert('error', `エラーが発生しました: ${error.message}`);
+    }
+  } finally {
+    // ボタンを元の状態に戻す
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+    }
+  }
+}
+
+// === CUSTOMER MANAGEMENT ===
+
+// 顧客入力方法の切り替え
+function toggleCustomerInput() {
+  const existingCustomerRadio = document.getElementById('existing-customer');
+  const newCustomerRadio = document.getElementById('new-customer');
+  const existingSection = document.getElementById('existing-customer-section');
+  const newSection = document.getElementById('new-customer-section');
+  
+  if (existingCustomerRadio && existingCustomerRadio.checked) {
+    existingSection.style.display = 'block';
+    newSection.style.display = 'none';
+    
+    // 新規顧客フィールドの必須を解除
+    const newFields = newSection.querySelectorAll('[required]');
+    newFields.forEach(field => field.removeAttribute('required'));
+  } else {
+    existingSection.style.display = 'none';
+    newSection.style.display = 'block';
+    
+    // 新規顧客フィールドに必須を設定
+    document.getElementById('add-customer-name').setAttribute('required', 'required');
+    document.getElementById('add-customer-email').setAttribute('required', 'required');
+  }
+}
+
+// 顧客検索
+let searchTimeout;
+async function searchCustomers(query) {
+  clearTimeout(searchTimeout);
+  
+  const resultsContainer = document.getElementById('customer-search-results');
+  
+  if (query.length < 2) {
+    resultsContainer.style.display = 'none';
+    return;
+  }
+  
+  searchTimeout = setTimeout(async () => {
+    try {
+      const response = await fetch(`${window.routes.searchCustomers}?query=${encodeURIComponent(query)}`, {
+        method: 'GET',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+          'Accept': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.success && result.customers) {
+        displayCustomerResults(result.customers);
+      } else {
+        resultsContainer.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Customer search error:', error);
+      resultsContainer.style.display = 'none';
+    }
+  }, 300);
+}
+
+// 顧客検索結果を表示
+function displayCustomerResults(customers) {
+  const resultsContainer = document.getElementById('customer-search-results');
+  
+  if (customers.length === 0) {
+    resultsContainer.innerHTML = '<div class="p-2 text-sm text-gray-500">該当する顧客が見つかりません</div>';
+    resultsContainer.style.display = 'block';
+    return;
+  }
+  
+  const html = customers.map(customer => `
+    <div class="p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0" 
+         onclick="selectCustomer(${customer.id}, '${customer.name}', '${customer.email}', '${customer.phone || ''}')">
+      <div class="font-medium text-sm">${customer.name}</div>
+      <div class="text-xs text-gray-500">${customer.email}</div>
+      ${customer.phone ? `<div class="text-xs text-gray-500">${customer.phone}</div>` : ''}
+    </div>
+  `).join('');
+  
+  resultsContainer.innerHTML = html;
+  resultsContainer.style.display = 'block';
+}
+
+// 顧客を選択
+function selectCustomer(id, name, email, phone) {
+  document.getElementById('selected-customer-id').value = id;
+  document.getElementById('customer-search').value = `${name} (${email})`;
+  document.getElementById('customer-search-results').style.display = 'none';
+  
+  // 新規顧客フィールドに値を設定（表示用）
+  document.getElementById('add-customer-name').value = name;
+  document.getElementById('add-customer-email').value = email;
+  document.getElementById('add-customer-phone').value = phone || '';
 }

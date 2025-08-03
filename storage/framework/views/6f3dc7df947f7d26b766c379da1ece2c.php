@@ -65,7 +65,24 @@
         <!-- 予約一覧 -->
         <?php if($slot->reservations->count() > 0): ?>
           <div class="mt-4">
-            <h5 class="text-sm font-medium text-gray-900 mb-3">予約一覧 (<?php echo e($slot->reservations->count()); ?>件)</h5>
+            <div class="flex justify-between items-center mb-3">
+              <h5 class="text-sm font-medium text-gray-900">予約一覧 (<?php echo e($slot->reservations->count()); ?>件)</h5>
+              
+              <!-- 予約追加ボタン（容量チェック） -->
+              <?php if($slot->reservations->where('status', '!=', 'cancelled')->count() < $slot->capacity): ?>
+                <button 
+                  onclick="addReservation(<?php echo e($slot->id); ?>)"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors flex items-center space-x-1"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  <span>予約追加</span>
+                </button>
+              <?php else: ?>
+                <span class="text-sm text-red-600 font-medium">満席</span>
+              <?php endif; ?>
+            </div>
             <div class="space-y-2">
               <?php $__currentLoopData = $slot->reservations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $reservation): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="bg-white border border-gray-200 rounded-lg p-3">
@@ -155,12 +172,27 @@
             </div>
           </div>
         <?php else: ?>
-          <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div class="flex items-center">
-              <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-              </svg>
-              <p class="text-sm text-yellow-800">この時間枠にはまだ予約がありません。</p>
+          <div class="mt-4">
+            <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <p class="text-sm text-yellow-800">この時間枠にはまだ予約がありません。</p>
+                </div>
+                
+                <!-- 予約追加ボタン -->
+                <button 
+                  onclick="addReservation(<?php echo e($slot->id); ?>)"
+                  class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors flex items-center space-x-1"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  <span>予約追加</span>
+                </button>
+              </div>
             </div>
           </div>
         <?php endif; ?>

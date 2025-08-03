@@ -53,8 +53,13 @@ Route::prefix('customer')->name('customer.')->group(function () {
 
     // 顧客認証が必要
     Route::middleware('auth:customer')->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('customer.dashboard');
+        Route::get('/dashboard', [App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
         Route::post('/logout', [App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('logout');
+
+        // 顧客プロフィール管理
+        Route::get('/profile', [App\Http\Controllers\Customer\ProfileController::class, 'show'])->name('profile.show');
+        Route::get('/profile/edit', [App\Http\Controllers\Customer\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [App\Http\Controllers\Customer\ProfileController::class, 'update'])->name('profile.update');
 
         // 顧客の予約管理（自分の予約のみ）
         Route::get('/reservations', [App\Http\Controllers\Customer\ReservationController::class, 'index'])->name('reservations.index');
@@ -90,6 +95,7 @@ Route::middleware('admin')->group(function () {
     Route::get('/admin/calendar', [AdminCalendarController::class, 'index'])->name('admin.calendar.index');
     Route::get('/admin/calendar/change-month', [AdminCalendarController::class, 'changeMonth'])->name('admin.calendar.change-month');
     Route::get('/admin/calendar/day-slots', [AdminCalendarController::class, 'getDaySlots'])->name('admin.calendar.day-slots');
+    Route::get('/admin/calendar/search-customers', [AdminCalendarController::class, 'searchCustomers'])->name('admin.calendar.search-customers');
     
     // 時間枠管理 (AdminCalendar用)
     Route::post('/admin/calendar/timeslots', [AdminCalendarController::class, 'createTimeSlot'])->name('admin.calendar.timeslots.create');
@@ -97,6 +103,7 @@ Route::middleware('admin')->group(function () {
     Route::delete('/admin/timeslots/{id}', [AdminCalendarController::class, 'deleteTimeSlot'])->name('admin.timeslots.delete');
     
     // 予約管理
+    Route::post('/admin/calendar/reservations', [AdminCalendarController::class, 'createReservation'])->name('admin.calendar.reservations.create');
     Route::put('/admin/reservations/{id}', [AdminCalendarController::class, 'updateReservation'])->name('admin.reservations.update');
     Route::delete('/admin/reservations/{id}', [AdminCalendarController::class, 'deleteReservation'])->name('admin.reservations.delete');
 });

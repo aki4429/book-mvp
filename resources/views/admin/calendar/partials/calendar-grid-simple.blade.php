@@ -39,9 +39,6 @@
               ];
             })->toArray() : []
           ];
-          
-          // デバッグ: 8月3日の場合に情報を表示
-          $isDebugDate = $dateString === '2025-08-03';
         @endphp
         
         <div 
@@ -63,31 +60,34 @@
             @endif
           </div>
           
-          <!-- デバッグ情報（8月3日のみ） -->
-          @if ($isDebugDate)
-            <div class="text-xs bg-yellow-100 p-1 rounded mb-1">
-              <div>hasSlots: {{ $hasSlots ? 'true' : 'false' }}</div>
-              <div>totalSlots: {{ $totalSlots }}</div>
-              <div>totalReservations: {{ $totalReservations }}</div>
-              <div>availableSlots: {{ $availableSlots }}</div>
-              <div>slots count: {{ isset($day['slots']) ? $day['slots']->count() : 'N/A' }}</div>
+          <!-- 予約件数の表示 -->
+          @if ($hasSlots)
+            <div class="mb-2">
+              @if ($totalReservations > 0)
+                <div class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 mb-1">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  予約: {{ $totalReservations }}件
+                </div>
+              @endif
             </div>
           @endif
           
           <!-- 予約状況 -->
           @if ($hasSlots)
             <div class="space-y-1">
-              <div class="text-xs text-gray-600">
-                予約: {{ $totalReservations }}件
-              </div>
-              
               @if ($availableSlots > 0)
                 <div class="text-xs text-green-600 font-medium">
                   空き: {{ $availableSlots }}枠
                 </div>
-              @else
+              @elseif ($totalReservations > 0)
                 <div class="text-xs text-red-600 font-medium">
                   満席
+                </div>
+              @else
+                <div class="text-xs text-gray-500">
+                  予約なし
                 </div>
               @endif
               

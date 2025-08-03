@@ -65,7 +65,7 @@
       
       <div class="flex items-center space-x-4">
         @auth
-          <!-- ログイン中のユーザー情報 -->
+          <!-- 管理者ログイン中 -->
           <div class="flex items-center space-x-3">
             <div class="flex items-center space-x-2">
               <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -107,10 +107,67 @@
               </button>
             </form>
           </div>
+        @elseif(auth('customer')->check())
+          <!-- 顧客ログイン中 -->
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                <span class="text-white text-sm font-medium">
+                  {{ substr(auth('customer')->user()->name, 0, 1) }}
+                </span>
+              </div>
+              <div class="text-sm">
+                <p class="font-medium text-gray-700">{{ auth('customer')->user()->name }}</p>
+                <p class="text-gray-500">{{ auth('customer')->user()->email }}</p>
+                <p class="text-green-600 text-xs font-medium">顧客</p>
+              </div>
+            </div>
+            
+            <!-- マイページリンク -->
+            <a href="{{ route('customer.dashboard') }}" 
+               class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+              </svg>
+              <span>マイページ</span>
+            </a>
+            
+            <!-- プロフィールリンク -->
+            <a href="{{ route('customer.profile.show') }}" 
+               class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <span>プロフィール</span>
+            </a>
+            
+            <!-- 予約管理リンク -->
+            <a href="{{ route('customer.reservations.index') }}" 
+               class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              <span>予約管理</span>
+            </a>
+            
+            <!-- ログアウトボタン -->
+            <form method="POST" action="{{ route('customer.logout') }}" class="inline">
+              @csrf
+              <button type="submit" 
+                      class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                      onclick="return confirm('ログアウトしますか？')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                </svg>
+                <span>ログアウト</span>
+              </button>
+            </form>
+          </div>
         @else
           <!-- 未ログインの場合 -->
           <div class="flex items-center space-x-3">
-            <a href="{{ route('login') }}" 
+            <a href="{{ route('customer.login') }}" 
                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               ログイン
             </a>
@@ -182,7 +239,14 @@
 
       <!-- タイムスロット表示エリア -->
       <div id="timeslot-container" class="mt-6 bg-white rounded-lg shadow-sm p-6" style="display: none;">
-        <h3 id="timeslot-title" class="text-lg font-medium text-gray-900 mb-4">選択された日の予約枠</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 id="timeslot-title" class="text-lg font-medium text-gray-900">選択された日の予約枠</h3>
+          <button onclick="hideTimeslotDetails()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
         <div id="timeslot-content"></div>
       </div>
     </main>
@@ -206,6 +270,7 @@
   <script>
     let currentYear = {{ $currentYear }};
     let currentMonth = {{ $currentMonth }};
+    let selectedDate = null;
     let tooltipTimeout;
     let isTooltipPinned = false; // ツールチップが固定されているかどうか
 
@@ -309,6 +374,18 @@
       .catch(error => {
         console.error('Error:', error);
       });
+    }
+
+    function hideTimeslotDetails() {
+      const container = document.getElementById('timeslot-container');
+      container.style.display = 'none';
+      
+      // 選択状態をリセット
+      document.querySelectorAll('.calendar-day').forEach(day => {
+        day.classList.remove('selected-date');
+      });
+      
+      selectedDate = null;
     }
 
     function showTimeSlotTooltip(event, date, isPinned = false) {

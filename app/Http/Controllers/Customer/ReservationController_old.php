@@ -18,7 +18,7 @@ class ReservationController extends Controller
     }
 
     /**
-     * 顧客の予約一覧
+     * 予約一覧表示
      */
     public function index(Request $request)
     {
@@ -80,13 +80,21 @@ class ReservationController extends Controller
         ]);
 
         $timeSlot = TimeSlot::find($request->time_slot_id);
-        
-        // 時間枠の可用性をチェック
-        if (!$timeSlot || $timeSlot->capacity <= $timeSlot->reservations->count()) {
-            return back()->with('error', '選択された時間枠はもう予約できません。');
+
+        // 空き容量チェック
+        if ($timeSlot->capacity <= $timeSlot->reservations->count()) {
+            return back()->with('error', 'この時間枠は満席です。');
         }
 
-        // 予約作成
+        // 重複予約チェック
+        $existingReservation = Reservation::where('customer_id', $customer->id)
+            ->where('time_slot_id', $timeSlot->id)
+            ->first();
+
+        if ($existingReservation) {
+            return back()->with('error', 'この時間枠は既に予約済みです。');
+        }
+
         Reservation::create([
             'customer_id' => $customer->id,
             'time_slot_id' => $timeSlot->id,
@@ -96,6 +104,37 @@ class ReservationController extends Controller
 
         return redirect()->route('customer.reservations.index')
             ->with('success', '予約が完了しました。');
+    }
+
+    /**
+     * 顧客の予約一覧
+     */
+    public function index(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        $status = $request->get('status', 'all');
+        
+        $query = $customer->reservations()->with(['timeSlot']);
+        
+        // ステータスフィルター
+        if ($status === 'upcoming') {
+            $query->whereHas('timeSlot', function($q) {
+                $q->where('date', '>=', today());
+            });
+        } elseif ($status === 'past') {
+            $query->whereHas('timeSlot', function($q) {
+                $q->where('date', '<', today());
+            });
+        }
+        
+        // 日付順でソート
+        $reservations = $query->join('time_slots', 'reservations.time_slot_id', '=', 'time_slots.id')
+            ->orderBy('time_slots.date', 'desc')
+            ->orderBy('time_slots.start_time', 'desc')
+            ->select('reservations.*')
+            ->paginate(10);
+            
+        return view('customer.reservations.index', compact('reservations', 'status'));
     }
 
     /**
